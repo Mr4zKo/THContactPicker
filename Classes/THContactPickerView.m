@@ -23,6 +23,7 @@
 @property (nonatomic, strong) THContactTextField *textView;
 @property (nonatomic, strong) THBubbleStyle *bubbleStyle;
 @property (nonatomic, strong) THBubbleStyle *bubbleSelectedStyle;
+@property (nonatomic, strong) UIButton *addContactButton;
 
 @end
 
@@ -63,6 +64,7 @@
     self.scrollView.scrollsToTop = NO;
     self.scrollView.delegate = self;
     self.scrollView.autoresizingMask = UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth;
+    [self.scrollView setShowsVerticalScrollIndicator:false];
     [self addSubview:self.scrollView];
     
     // Add placeholder label
@@ -82,6 +84,10 @@
     self.textView.delegate = self;
     self.textView.autocorrectionType = UITextAutocorrectionTypeNo;
     [self selectTextView];
+    
+    self.addContactButton = [[UIButton alloc] init];
+    [self.addContactButton setBackgroundImage:[UIImage imageNamed:@"addContactButton"] forState:UIControlStateNormal];
+    [self addSubview:self.addContactButton];
     
     // Add shadow to bottom border
     self.backgroundColor = [UIColor whiteColor];
@@ -399,6 +405,14 @@
         // Adjust scroll view height
         frame.size.height = newHeight;
         self.scrollView.frame = frame;
+        
+        //TODO: bodnu vzdialenost dat do konstanty a velkost pluska do konstanty
+        CGRect newFrame = CGRectMake(frame.origin.x, frame.origin.y, frame.size.width-26, frame.size.height);
+        self.scrollView.frame = newFrame;
+        
+        int contactButtonXpos = newFrame.origin.x+newFrame.size.width+2;
+        int contactButtonYpos = self.textView.frame.origin.y+(self.textView.frame.size.height-22)/2;
+        self.addContactButton.frame = CGRectMake(contactButtonXpos, contactButtonYpos, 22, 22);
         
         if ([self.delegate respondsToSelector:@selector(contactPickerDidResize:)]){
             [self.delegate contactPickerDidResize:self];
