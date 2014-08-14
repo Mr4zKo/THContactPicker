@@ -28,28 +28,32 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
              parentView:(UIView *)parentView;{
     
     if(self = [super init]){
+        self.privateSelectedContacts = [[NSMutableArray alloc] init];
         self.contactPickerView = contactPickerView;
         [self.contactPickerView setHidden:NO];
-        [self.contactPickerView setDelegate:self];
         
         self.contactsTableView = tableView;
-        [self.contactsTableView setHidden:YES];
-        [self.contactsTableView setDelegate:self];
-        [self.contactsTableView setDataSource:self];
+        [self.contactsTableView setHidden:NO];
         
         self.view = parentView;
         
-        self.contacts = [self contactsFromAddressBook];
-        
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidHide:) name:UIKeyboardDidHideNotification object:nil];
+        [self setDelegatesFillWithData];
     }
     
     return self;
 }
 
+-(void)setDelegatesFillWithData{
+    self.contacts = [self contactsFromAddressBook];
+    [self.contactPickerView setDelegate:self];
+    [self.contactsTableView setDelegate:self];
+    [self.contactsTableView setDataSource:self];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidHide:) name:UIKeyboardDidHideNotification object:nil];
+}
+
 -(void)dealloc{
-    [super dealloc];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -126,24 +130,19 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     id contact = [self.filteredContacts objectAtIndex:indexPath.row];
     NSString *contactTilte = [self titleForRowAtIndexPath:indexPath];
     
-    if ([self.privateSelectedContacts containsObject:contact]){ // contact is already selected so remove it from ContactPickerView
-        cell.accessoryType = UITableViewCellAccessoryNone;
-        [self.privateSelectedContacts removeObject:contact];
-        [self.contactPickerView removeContact:contact];
-    } else {
-        // Contact has not been selected, add it to THContactPickerView
-        cell.accessoryType = UITableViewCellAccessoryCheckmark;
+    if(![self.privateSelectedContacts containsObject:contact]){
         [self.privateSelectedContacts addObject:contact];
+        cell.accessoryType = UITableViewCellAccessoryCheckmark;
         [self.contactPickerView addContact:contact withName:contactTilte];
     }
-    
-    self.filteredContacts = self.contacts;
-    [self didChangeSelectedItems];
-    [self.contactsTableView reloadData];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
     return 55;
+}
+
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView{
+    [self.contactPickerView resignFirstResponder];
 }
 
 #pragma mark - Public properties
@@ -167,14 +166,14 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     return self.privateSelectedContacts.count;
 }
 
-#pragma mark - Private methods
-
 - (void)adjustTableFrame {
     CGFloat yOffset = self.contactPickerView.frame.origin.y + self.contactPickerView.frame.size.height;
     
     CGRect tableFrame = CGRectMake(0, yOffset, self.view.frame.size.width, self.view.frame.size.height - yOffset);
     self.contactsTableView.frame = tableFrame;
 }
+
+#pragma mark - Private methods
 
 - (void)adjustTableViewInsetTop:(CGFloat)topInset {
     [self adjustTableViewInsetTop:topInset bottom:self.contactsTableView.contentInset.bottom];
@@ -226,10 +225,10 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     for( int i = 0 ; i < n ; i++ ){
         ABRecordRef ref = CFArrayGetValueAtIndex(all, i);
         
-        NSString* compositeName = (__bridge NSString *)ABRecordCopyCompositeName(ref);
+        NSString* compositeName = (__bridge_transfer NSString *)ABRecordCopyCompositeName(ref);
         
         CFTypeRef phoneProperty = ABRecordCopyValue(ref, kABPersonPhoneProperty);
-        NSArray *phones = (__bridge NSArray *)ABMultiValueCopyArrayOfAllValues(phoneProperty);
+        NSArray *phones = (__bridge_transfer NSArray *)ABMultiValueCopyArrayOfAllValues(phoneProperty);
         CFRelease(phoneProperty);
         for (NSString *phone in phones){
             THContact *contact = [[THContact alloc] init];
@@ -238,6 +237,10 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
             [contactsArray addObject:contact];
         }
     }
+    
+    CFRelease(addressBook);
+    CFRelease(all);
+    
     
     return contactsArray;
 }

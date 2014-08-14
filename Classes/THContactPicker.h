@@ -11,12 +11,14 @@
 
 @interface THContactPicker : NSObject <THContactPickerDelegate, UITableViewDataSource, UITableViewDelegate>
 
-@property(nonatomic, strong) THContactPickerView *contactPickerView;
-@property(nonatomic,strong) UITableView *contactsTableView;
-@property(nonatomic, strong) UIView *view;
+@property(nonatomic, assign) THContactPickerView *contactPickerView;
+@property(nonatomic, assign) UITableView *contactsTableView;
+@property(nonatomic, assign) UIView *view;
 
 -(id)initWithContactPickerView:(THContactPickerView *)contactPickerView
             contactsScrollView:(UITableView *)tableView
                     parentView:(UIView *)parentView;
+
+- (void)adjustTableFrame;
 
 @end
