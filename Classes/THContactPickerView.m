@@ -12,6 +12,7 @@
 
 @interface THContactPickerView ()<THContactTextFieldDelegate>{
     BOOL _shouldSelectTextView;
+    BOOL _closed;
 }
 
 @property (nonatomic, strong) UIScrollView *scrollView;
@@ -24,16 +25,18 @@
 @property (nonatomic, strong) THBubbleStyle *bubbleStyle;
 @property (nonatomic, strong) THBubbleStyle *bubbleSelectedStyle;
 @property (nonatomic, strong) UIButton *addContactButton;
+@property (nonatomic, strong) UILabel *closedLabel;
 
 @end
 
 @implementation THContactPickerView
 
-#define kVerticalViewPadding        5   // the amount of padding on top and bottom of the view
+#define kVerticalViewPadding    0    //5   // the amount of padding on top and bottom of the view
 #define kHorizontalPadding      0   // the amount of padding to the left and right of each contact bubble
-#define kHorizontalSidePadding  10  // the amount of padding on the left and right of the view
+#define kHorizontalSidePadding  0//10  // the amount of padding on the left and right of the view
 #define kVerticalPadding        2   // amount of padding above and below each contact bubble
 #define kTextViewMinWidth       20  // minimum width of trailing text view
+#define kPlusButtonRightMargin  13
 
 - (id)initWithCoder:(NSCoder *)aDecoder {
     self = [super initWithCoder:aDecoder];
@@ -54,6 +57,7 @@
 }
 
 - (void)setup {
+    
     self.verticalPadding = kVerticalViewPadding;
     
     self.contacts = [NSMutableDictionary dictionary];
@@ -63,7 +67,7 @@
     self.scrollView = [[UIScrollView alloc] initWithFrame:self.bounds];
     self.scrollView.scrollsToTop = NO;
     self.scrollView.delegate = self;
-    self.scrollView.autoresizingMask = UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth;
+    //self.scrollView.autoresizingMask = UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth;
     [self.scrollView setShowsVerticalScrollIndicator:false];
     [self addSubview:self.scrollView];
     
@@ -71,7 +75,7 @@
     self.placeholderLabel = [[UILabel alloc] init];
     self.placeholderLabel.textColor = [UIColor grayColor];
     self.placeholderLabel.backgroundColor = [UIColor clearColor];
-    [self.scrollView addSubview:self.placeholderLabel];
+    [self addSubview:self.placeholderLabel];
     
     self.promptLabel = [[UILabel alloc] init];
     self.promptLabel.backgroundColor = [UIColor clearColor];
@@ -86,7 +90,6 @@
     [self selectTextView];
     
     self.addContactButton = [[UIButton alloc] init];
-    [self.addContactButton setBackgroundImage:[UIImage imageNamed:@"addContactButton"] forState:UIControlStateNormal];
     [self addSubview:self.addContactButton];
     
     // Add shadow to bottom border
@@ -102,6 +105,18 @@
     self.bubbleStyle = contactBubble.style;
     self.bubbleSelectedStyle = contactBubble.selectedStyle;
     self.font = contactBubble.label.font;
+    
+    _closed = YES;
+    self.closedLabel = [[UILabel alloc] init];
+    [self.closedLabel setUserInteractionEnabled:YES];
+    UITapGestureRecognizer *tg = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tappedClosedLabel)];
+    [self.closedLabel addGestureRecognizer:tg];
+    [self addSubview:self.closedLabel];
+    
+    [self.closedLabel setHidden:NO];
+    [self.scrollView setHidden:YES];
+    
+    [self.closedLabel setBackgroundColor:[UIColor clearColor]];
 }
 
 #pragma mark - Public functions
@@ -118,6 +133,7 @@
     
     self.promptLabel.font = font;
     self.placeholderLabel.font = font;
+    self.closedLabel.font = font;
     [self updateLabelFrames];
 }
 
@@ -126,6 +142,10 @@
     
     [self updateLabelFrames];
     [self layoutView];
+}
+
+- (void)setUnselectedFontColor:(UIColor *)unselectedColor{
+    [self.textView setTextColor:unselectedColor];
 }
 
 - (void)addContact:(id)contact withName:(NSString *)name {
@@ -208,6 +228,14 @@
     self.placeholderLabel.text = text;
 
     [self layoutView];
+}
+
+-(void)setPlaceholderTextColor:(UIColor *)placeholderColor{
+    [self.placeholderLabel setTextColor:placeholderColor];
+}
+
+- (void)setSelectedTextColor:(UIColor *)selectedTextColor{
+    [self.closedLabel setTextColor:selectedTextColor];
 }
 
 - (void)resignFirstResponder {
@@ -306,7 +334,7 @@
 - (void)updateLabelFrames {
     [self.promptLabel sizeToFit];
     self.promptLabel.frame = CGRectMake(kHorizontalSidePadding, self.verticalPadding, self.promptLabel.frame.size.width, self.lineHeight);
-    self.placeholderLabel.frame = CGRectMake([self firstLineXOffset] + 3, self.verticalPadding, self.frame.size.width, self.lineHeight);
+    self.placeholderLabel.frame = CGRectMake([self firstLineXOffset], self.verticalPadding, self.frame.size.width, self.lineHeight);
 }
 
 - (CGFloat)firstLineXOffset {
@@ -318,6 +346,7 @@
 }
 
 - (void)layoutView {
+    
     CGRect frameOfLastBubble = CGRectNull;
     int lineCount = 0;
     
@@ -332,7 +361,7 @@
         } else {
             // Check if contact bubble will fit on the current line
             CGFloat width = bubbleFrame.size.width + 2 * kHorizontalPadding;
-            if (self.frame.size.width - kHorizontalSidePadding - frameOfLastBubble.origin.x - frameOfLastBubble.size.width - width >= 0){ // add to the same line
+            if (self.scrollView.frame.size.width - kHorizontalSidePadding - frameOfLastBubble.origin.x - frameOfLastBubble.size.width - width >= 0){ // add to the same line
                                                                                                                  // Place contact bubble just after last bubble on the same line
                 bubbleFrame.origin.x = frameOfLastBubble.origin.x + frameOfLastBubble.size.width + kHorizontalPadding * 2;
                 bubbleFrame.origin.y = frameOfLastBubble.origin.y;
@@ -354,8 +383,12 @@
     // Now add a textView after the comment bubbles
     CGFloat minWidth = kTextViewMinWidth + 2 * kHorizontalPadding;
     CGFloat textViewHeight = self.lineHeight - 2 * kVerticalPadding;
-    CGRect textViewFrame = CGRectMake(0, 0, self.textView.frame.size.width, textViewHeight);
-
+    CGRect textViewFrame = CGRectMake(0, 0, self.scrollView.frame.size.width, textViewHeight);
+    
+    //now closed view
+    // aby sa vyska dorovnala so scroll viewom
+    self.closedLabel.frame = CGRectMake(0, 2, self.scrollView.frame.size.width, textViewHeight);
+    
     // Check if we can add the text field on the same line as the last contact bubble
     if (self.frame.size.width - kHorizontalSidePadding - frameOfLastBubble.origin.x - frameOfLastBubble.size.width - minWidth >= 0){ // add to the same line
         textViewFrame.origin.x = frameOfLastBubble.origin.x + frameOfLastBubble.size.width + kHorizontalPadding;
@@ -404,15 +437,19 @@
         
         // Adjust scroll view height
         frame.size.height = newHeight;
-        self.scrollView.frame = frame;
         
         //TODO: bodnu vzdialenost dat do konstanty a velkost pluska do konstanty
-        CGRect newFrame = CGRectMake(frame.origin.x, frame.origin.y, frame.size.width-26, frame.size.height);
+        CGRect newFrame = CGRectMake(frame.origin.x, frame.origin.y, frame.size.width-self.frame.origin.x-26-kPlusButtonRightMargin, frame.size.height);
         self.scrollView.frame = newFrame;
+        //frame of views depending on scrollviews frame
+        CGRect closedLabelFrame = self.closedLabel.frame;
+        closedLabelFrame.size.width = self.scrollView.frame.size.width;
+        self.closedLabel.frame = closedLabelFrame;
         
         int contactButtonXpos = newFrame.origin.x+newFrame.size.width+2;
-        int contactButtonYpos = self.textView.frame.origin.y+(self.textView.frame.size.height-22)/2;
+        int contactButtonYpos = 2;
         self.addContactButton.frame = CGRectMake(contactButtonXpos, contactButtonYpos, 22, 22);
+        [self.addContactButton addTarget:self action:@selector(addContactPressed:) forControlEvents:UIControlEventTouchUpInside];
         
         if ([self.delegate respondsToSelector:@selector(contactPickerDidResize:)]){
             [self.delegate contactPickerDidResize:self];
@@ -424,6 +461,19 @@
         self.placeholderLabel.hidden = NO;
     } else {
         self.placeholderLabel.hidden = YES;
+    }
+    
+    if(_closed){
+        CGFloat lh = self.lineHeight + 2 * self.verticalPadding;
+        CGRect closedFrame = self.frame;
+        closedFrame.size.height = lh;
+        self.frame = closedFrame;
+        
+        if ([self.delegate respondsToSelector:@selector(contactPickerDidResize:)]){
+            [self.delegate contactPickerDidResize:self];
+        }
+        
+        return;
     }
 }
 
@@ -444,9 +494,12 @@
 }
 
 - (void)textFieldDidChange:(THContactTextField *)textView{
+    
     if ([self.delegate respondsToSelector:@selector(contactPickerTextViewDidChange:)]){
         [self.delegate contactPickerTextViewDidChange:textView.text];
     }
+    
+    [self layoutView];
     
     if ([textView.text isEqualToString:@""] && self.contacts.count == 0){
         self.placeholderLabel.hidden = NO;
@@ -459,6 +512,26 @@
     if (offset.y > self.scrollView.contentOffset.y){
         [self scrollToBottomWithAnimation:YES];
     }
+}
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField{
+    
+    if([[textField text] isEqualToString:@""]){
+        if ([self.delegate respondsToSelector:@selector(keyboardReturnClicked)]){
+            [self.delegate keyboardReturnClicked];
+        }
+    }else{
+        NSString *contactNameNumber = [textField.text stringByReplacingOccurrencesOfString:@" " withString:@""];
+        THContact *contact = [[THContact alloc] init];
+        contact.name = contactNameNumber;
+        [contact addPhoneNumber:contactNameNumber];
+        
+        if ([self.delegate respondsToSelector:@selector(contactPickerAddContact:)]){
+            [self.delegate contactPickerAddContact:contact];
+        }
+    }
+    
+    return NO;
 }
 
 #pragma mark - THContactBubbleDelegate Functions
@@ -484,6 +557,13 @@
 
 - (void)contactBubbleShouldBeRemoved:(THContactBubble *)contactBubble {
     [self removeContactBubble:contactBubble];
+}
+
+- (void)contactBubbleKeyboardReturnClicked:(THContactBubble *)contactBubble{
+    
+    if ([self.delegate respondsToSelector:@selector(keyboardReturnClicked)]){
+        [self.delegate keyboardReturnClicked];
+    }
 }
 
 #pragma mark - Gesture Recognizer
@@ -522,6 +602,90 @@
 
 - (UIKeyboardAppearance)keyboardAppearance {
     return self.textView.keyboardAppearance;
+}
+
+#pragma mark - View control
+
+-(void) close{
+    NSLog(@"close called");
+    
+    if (self.selectedContactBubble){
+        NSLog(@"unselecting selected");
+        [self.selectedContactBubble unSelect];
+        self.selectedContactBubble = nil;
+    }
+    
+    _closed = YES;
+    
+    [self.closedLabel setText:[self generateClosedLabelString]];
+    
+    [self.closedLabel setHidden:NO];
+    [self.scrollView setHidden:YES];
+    
+    [self layoutView];
+    [self.textView resignFirstResponder];
+}
+
+-(void) open {
+    
+    _closed = NO;
+    
+    [self.closedLabel setHidden:YES];
+    [self.scrollView setHidden:NO];
+    
+    [self layoutView];
+    [self selectTextView];
+}
+
+- (void)textFieldDidEndEditing:(UITextView *)textView{
+    //[self close];
+}
+
+-(void)tappedClosedLabel{
+    [self open];
+}
+
+-(void)addContactButtonImage:(UIImage *)addContactImage{
+    [self.addContactButton setImage:addContactImage forState:UIControlStateNormal];
+}
+
+#pragma mark - addContactButton events
+-(void)addContactPressed:(id)object{
+    [self clearTextView];
+    [self unselectSelectedBubble];
+    [self.delegate contactPickerAddContactButtonClicked];
+}
+
+-(void)clearTextView{
+    [self.textView setText:@""];
+}
+
+-(void)unselectSelectedBubble{
+    
+    NSLog(@"unselecting selected");
+    
+    if (self.selectedContactBubble){
+        [self.selectedContactBubble unSelect];
+        self.selectedContactBubble = nil;
+    }
+}
+
+-(NSString *)generateClosedLabelString{
+    if(self.contactKeys.count>0){
+        NSString *finalString = [(THContact *)[(NSValue *)[self.contactKeys objectAtIndex:0] nonretainedObjectValue] name];
+        
+        if(self.contactKeys.count>1){
+            for(int i=1; i<[self.contactKeys count]; i++){
+                NSValue *val = (NSValue *)[self.contactKeys objectAtIndex:i];
+                THContact *contact = (THContact *)[val nonretainedObjectValue];
+                finalString = [NSString stringWithFormat:@"%@, %@", finalString, [contact name]];
+            }
+        }
+        
+        return [NSString stringWithFormat:@"%@",finalString];
+    }else{
+        return @"";
+    }
 }
 
 @end

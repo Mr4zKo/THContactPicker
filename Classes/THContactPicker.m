@@ -7,7 +7,6 @@
 //
 
 #import "THContactPicker.h"
-#import "THContact.h"
 #import "THContactTableViewCell.h"
 #import <AddressBook/AddressBook.h>
 
@@ -33,7 +32,7 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
         [self.contactPickerView setHidden:NO];
         
         self.contactsTableView = tableView;
-        [self.contactsTableView setHidden:NO];
+        [self.contactsTableView setHidden:YES];
         
         self.view = parentView;
         
@@ -60,11 +59,20 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
 #pragma mark - THContactPickerDelegate
 
 - (void)contactPickerTextViewDidChange:(NSString *)textViewText{
-    if ([textViewText isEqualToString:@""]){
+    
+    if ([textViewText isEqualToString:@""]|| textViewText==nil){
         self.filteredContacts = self.contacts;
+        [self.contactsTableView setHidden:YES];
     } else {
         self.filteredContacts = [self filteredContactsByText:textViewText];
+        [self.contactsTableView setHidden:NO];
     }
+    
+    [self.contactsTableView setFrame:CGRectMake(self.contactsTableView.frame.origin.x,
+                                                self.contactPickerView.frame.origin.y+self.contactPickerView.frame.size.height,
+                                                self.contactsTableView.frame.size.width,
+                                                self.view.frame.size.height-self.contactPickerView.frame.size.height)];
+    [self.delegate contactPickerUpdatedHeight];
     [self.contactsTableView reloadData];
 }
 
@@ -92,6 +100,21 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     CGRect frame = self.contactsTableView.frame;
     frame.origin.y = contactPickerView.frame.size.height + contactPickerView.frame.origin.y;
     self.contactsTableView.frame = frame;
+    [self.delegate contactPickerUpdatedHeight];
+}
+
+- (void)contactPickerAddContactButtonClicked{
+    [self.contactsTableView setHidden:YES];
+    [self.delegate contactPickerAddContactButtonClicked];
+}
+
+- (void)keyboardReturnClicked{
+    [self.contactPickerView clearTextView];
+    [self closeContactPicker];
+}
+
+- (void)contactPickerAddContact:(THContact *)contact{
+    [self addContact:contact];
 }
 
 #pragma mark - UITableView Delegate and Datasource functions
@@ -135,6 +158,10 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
         cell.accessoryType = UITableViewCellAccessoryCheckmark;
         [self.contactPickerView addContact:contact withName:contactTilte];
     }
+    
+    self.filteredContacts = self.contacts;
+    [self.contactsTableView reloadData];
+    [self.contactsTableView setHidden:YES];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -171,6 +198,16 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     
     CGRect tableFrame = CGRectMake(0, yOffset, self.view.frame.size.width, self.view.frame.size.height - yOffset);
     self.contactsTableView.frame = tableFrame;
+    [self.delegate contactPickerUpdatedHeight];
+}
+
+- (void)closeContactPicker{
+    [self.contactPickerView close];
+    [self.contactsTableView setHidden:YES];
+}
+
+- (void)openContactPicker{
+    
 }
 
 #pragma mark - Private methods
@@ -256,6 +293,45 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     NSDictionary *info = [notification userInfo];
     CGRect kbRect = [self.view convertRect:[[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue] fromView:self.view.window];
     [self adjustTableViewInsetBottom:self.contactsTableView.frame.origin.y + self.contactsTableView.frame.size.height - kbRect.origin.y];
+}
+
+- (void)addContact:(THContact *)contact{
+    
+    if(![self.privateSelectedContacts containsObject:contact] &&
+       ![self existsSameInPrivateContacts:contact]){
+        [self.privateSelectedContacts addObject:contact];
+        [self.contactPickerView addContact:contact withName:contact.name];
+    }else{
+        [self.contactPickerView clearTextView];
+    }
+    
+    self.filteredContacts = self.contacts;
+}
+
+- (BOOL)existsSameInPrivateContacts:(THContact *)contact{
+    
+    for(THContact *cont in self.privateSelectedContacts){
+        if([contact.name isEqualToString:cont.name] &&
+           [contact.phoneNumber isEqualToString:cont.phoneNumber]){
+            return YES;
+        }
+    }
+        
+    return NO;
+}
+
+- (void)clear{
+    [self.privateSelectedContacts removeAllObjects];
+    [self.contactPickerView removeAllContacts];
+    [self closeContactPicker];
+}
+
+- (NSUInteger)selectedContactsCount{
+    return [self.privateSelectedContacts count];
+}
+
+- (NSArray *)selectedContacts{
+    return [self privateSelectedContacts];
 }
 
 @end

@@ -17,6 +17,7 @@
 - (void)contactBubbleWasSelected:(THContactBubble *)contactBubble;
 - (void)contactBubbleWasUnSelected:(THContactBubble *)contactBubble;
 - (void)contactBubbleShouldBeRemoved:(THContactBubble *)contactBubble;
+- (void)contactBubbleKeyboardReturnClicked:(THContactBubble *)contactBubble;
 
 @end
 

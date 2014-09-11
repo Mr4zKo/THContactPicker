@@ -33,6 +33,11 @@
 }
 
 - (void)textFieldTextDidChange:(NSNotification *)notification {
+    
+    if([[self text] hasPrefix:@"  "]){
+        [self setText:@" "];
+    }
+    
     if (self.delegate && [self.delegate respondsToSelector:@selector(textFieldDidChange:)]){
         [self.delegate textFieldDidChange:self];
     }

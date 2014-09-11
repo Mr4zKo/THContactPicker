@@ -24,6 +24,14 @@
     [self.phoneNumbers addObject:number];
 }
 
+-(NSString *)phoneNumber{
+    if(self.phoneNumbers.count>0){
+        return [self.phoneNumbers objectAtIndex:0];
+    }
+    
+    else return @"";
+}
+
 -(BOOL)matchesFilterString:(NSString *)filterString{
     
     if([self string:self.name containsSubstring:filterString]){

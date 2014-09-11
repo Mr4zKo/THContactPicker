@@ -187,6 +187,9 @@
 - (void)handleTapGesture {
     if (self.isSelected){
         [self unSelect];
+        if ([self.delegate respondsToSelector:@selector(contactBubbleWasUnSelected:)]){
+            [self.delegate contactBubbleWasUnSelected:self];
+        }
     } else {
         [self select];
     }
@@ -198,6 +201,13 @@
     self.textView.hidden = NO;
     
     if ([text isEqualToString:@"\n"]){ // Return key was pressed
+        
+        [self unSelect];
+        
+        if ([self.delegate respondsToSelector:@selector(contactBubbleKeyboardReturnClicked:)]){
+            [self.delegate contactBubbleKeyboardReturnClicked:self];
+        }
+        
         return NO;
     }
     

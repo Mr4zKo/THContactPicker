@@ -8,8 +8,16 @@
 
 #import <Foundation/Foundation.h>
 #import "THContactPickerView.h"
+#import "THContact.h"
+
+@protocol THContactPickerNotifDelegate
+-(void)contactPickerUpdatedHeight;
+-(void)contactPickerAddContactButtonClicked;
+@end
 
 @interface THContactPicker : NSObject <THContactPickerDelegate, UITableViewDataSource, UITableViewDelegate>
+
+@property(nonatomic, assign) id<THContactPickerNotifDelegate>delegate;
 
 @property(nonatomic, assign) THContactPickerView *contactPickerView;
 @property(nonatomic, assign) UITableView *contactsTableView;
@@ -20,5 +28,14 @@
                     parentView:(UIView *)parentView;
 
 - (void)adjustTableFrame;
+
+- (void)closeContactPicker;
+- (void)openContactPicker;
+
+- (void)addContact:(THContact *)contact;
+
+- (void)clear;
+- (NSUInteger)selectedContactsCount;
+- (NSArray *)selectedContacts;
 
 @end

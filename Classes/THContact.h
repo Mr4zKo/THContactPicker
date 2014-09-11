@@ -16,4 +16,6 @@
 -(void)addPhoneNumber:(NSString*)number;
 -(BOOL)matchesFilterString:(NSString *)filterString;
 
+-(NSString *)phoneNumber;
+
 @end
