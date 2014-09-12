@@ -248,16 +248,16 @@
     [self layoutView];
 }
 
-- (void)setBubbleStyle:(THBubbleStyle *)style selectedStyle:(THBubbleStyle *)selectedStyle {
-    self.bubbleStyle = style;
-    self.textView.textColor = style.textColor;
-    self.bubbleSelectedStyle = selectedStyle;
+- (void)setBubbleStyle:(THBubbleStyle *)bubbleStyle selectedStyle:(THBubbleStyle *)selectedBubbleStyle {
+    self.bubbleStyle = bubbleStyle;
+    self.textView.textColor = bubbleStyle.textColor;
+    self.bubbleSelectedStyle = selectedBubbleStyle;
 
     for (id contactKey in self.contactKeys){
         THContactBubble *contactBubble = (THContactBubble *)[self.contacts objectForKey:contactKey];
 
-        contactBubble.style = style;
-        contactBubble.selectedStyle = selectedStyle;
+        contactBubble.style = bubbleStyle;
+        contactBubble.selectedStyle = selectedBubbleStyle;
 
         // this stuff reloads bubble
         if (contactBubble.isSelected){

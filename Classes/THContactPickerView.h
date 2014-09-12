@@ -39,7 +39,7 @@
 - (BOOL)becomeFirstResponder;
 
 // View Customization
-- (void)setBubbleStyle:(THBubbleStyle *)color selectedStyle:(THBubbleStyle *)selectedColor;
+- (void)setBubbleStyle:(THBubbleStyle *)bubbleStyle selectedStyle:(THBubbleStyle *)selectedBubbleStyle;
 - (void)setPlaceholderLabelText:(NSString *)text;
 - (void)setPlaceholderTextColor:(UIColor *)placeholderColor;
 - (void)setSelectedTextColor:(UIColor *)selectedTextColor;
