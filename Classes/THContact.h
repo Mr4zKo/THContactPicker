@@ -18,4 +18,6 @@
 
 -(NSString *)phoneNumber;
 
++(NSString *)removeDiacritics:(NSString *)stringToRemove;
+
 @end

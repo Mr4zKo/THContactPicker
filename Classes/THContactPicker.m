@@ -91,8 +91,9 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
 
 -(NSArray *)filteredContactsByText:(NSString *)text{
     NSMutableArray *filteredArray = [[NSMutableArray alloc] init];
+    NSString *textNoDiacritics = [THContact removeDiacritics:text];
     for(THContact *contact in self.contacts){
-        if([contact matchesFilterString:text]){
+        if([contact matchesFilterString:textNoDiacritics]){
             [filteredArray addObject:contact];
         }
     }

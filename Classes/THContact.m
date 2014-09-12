@@ -10,6 +10,8 @@
 
 @interface THContact()
 
+@property(nonatomic, strong) NSString *nameNoDiacritics;
+
 @end
 
 @implementation THContact
@@ -19,9 +21,15 @@
     if(self = [super init]){
         self.name = @"";
         self.phoneNumbers = [[NSMutableArray alloc] init];
+        self.nameNoDiacritics = @"";
     }
     
     return self;
+}
+
+-(void)setName:(NSString *)name{
+    _name = name;
+    self.nameNoDiacritics = [THContact removeDiacritics:self.name];
 }
 
 -(void)addPhoneNumber:(NSString*)number{
@@ -38,7 +46,7 @@
 
 -(BOOL)matchesFilterString:(NSString *)filterString{
     
-    if([self string:self.name containsSubstring:filterString]){
+    if([self string:self.nameNoDiacritics containsSubstring:filterString]){
         return YES;
     }
     
@@ -56,15 +64,13 @@
     NSString *lowerCaseString = [string lowercaseString];
     NSString *lowerCaseSubstring = [substring lowercaseString];
     
-    lowerCaseString = [self removeDiacritics:lowerCaseString];
-    lowerCaseSubstring = [self removeDiacritics:lowerCaseSubstring];
     
     NSRange range = [lowerCaseString rangeOfString: lowerCaseSubstring];
     BOOL found = (range.location!=NSNotFound);
     return found;
 }
 
--(NSString *)removeDiacritics:(NSString *)stringToRemove{
++(NSString *)removeDiacritics:(NSString *)stringToRemove{
     NSString *newString = [[NSString alloc]
                            initWithData:
                            [stringToRemove dataUsingEncoding:NSASCIIStringEncoding allowLossyConversion:YES]
