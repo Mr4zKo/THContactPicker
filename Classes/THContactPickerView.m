@@ -481,7 +481,6 @@
 
 - (void)textFieldDidHitBackspaceWithEmptyText:(THContactTextField *)textView {
     self.textView.hidden = NO;
-    
     if (self.contacts.count) {
         // Capture "delete" key press when cell is empty
         self.selectedContactBubble = [self.contacts objectForKey:[self.contactKeys lastObject]];
@@ -494,7 +493,6 @@
 }
 
 - (void)textFieldDidChange:(THContactTextField *)textView{
-    
     if ([self.delegate respondsToSelector:@selector(contactPickerTextViewDidChange:)]){
         [self.delegate contactPickerTextViewDidChange:textView.text];
     }

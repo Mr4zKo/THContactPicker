@@ -36,6 +36,7 @@
 - (void)removeContact:(id)contact;
 - (void)removeAllContacts;
 - (void)resignFirstResponder;
+- (BOOL)becomeFirstResponder;
 
 // View Customization
 - (void)setBubbleStyle:(THBubbleStyle *)color selectedStyle:(THBubbleStyle *)selectedColor;

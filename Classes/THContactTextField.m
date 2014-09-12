@@ -13,7 +13,7 @@
 - (id)init {
     self = [super init];
     if (self) {
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(textFieldTextDidChange:) name:UITextFieldTextDidChangeNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(textFieldTextDidChange:) name:UITextFieldTextDidChangeNotification object:self];
     }
     return self;
 }
@@ -33,8 +33,8 @@
 }
 
 - (void)textFieldTextDidChange:(NSNotification *)notification {
-    
-    if([[self text] hasPrefix:@"  "]){
+
+    if([[self text] isEqualToString:@"  "]){
         [self setText:@" "];
     }
     

@@ -59,7 +59,6 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
 #pragma mark - THContactPickerDelegate
 
 - (void)contactPickerTextViewDidChange:(NSString *)textViewText{
-    
     if ([textViewText isEqualToString:@""]|| textViewText==nil){
         self.filteredContacts = self.contacts;
         [self.contactsTableView setHidden:YES];
@@ -152,6 +151,9 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     
     id contact = [self.filteredContacts objectAtIndex:indexPath.row];
     NSString *contactTilte = [self titleForRowAtIndexPath:indexPath];
+    if([contactTilte isEqualToString:@""]){
+        contactTilte = [self phoneNumberForRowAtIndexPath:indexPath];
+    }
     
     if(![self.privateSelectedContacts containsObject:contact]){
         [self.privateSelectedContacts addObject:contact];
@@ -227,7 +229,8 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
 
 - (NSString *)titleForRowAtIndexPath:(NSIndexPath *)indexPath {
     THContact *contact = [self.filteredContacts objectAtIndex:indexPath.row];
-    return [contact name];
+    NSString *title = [contact name];
+    return title;
 }
 
 - (NSString *)phoneNumberForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -263,8 +266,10 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
         ABRecordRef ref = CFArrayGetValueAtIndex(all, i);
         
         NSString* compositeName = (__bridge_transfer NSString *)ABRecordCopyCompositeName(ref);
+        if(compositeName==nil) compositeName=@"";
         
         CFTypeRef phoneProperty = ABRecordCopyValue(ref, kABPersonPhoneProperty);
+        
         NSArray *phones = (__bridge_transfer NSArray *)ABMultiValueCopyArrayOfAllValues(phoneProperty);
         CFRelease(phoneProperty);
         for (NSString *phone in phones){
@@ -299,13 +304,16 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     
     if(![self.privateSelectedContacts containsObject:contact] &&
        ![self existsSameInPrivateContacts:contact]){
-        [self.privateSelectedContacts addObject:contact];
-        [self.contactPickerView addContact:contact withName:contact.name];
+        THContact *finalContact = [self contactFromContacts:contact];
+        [self.privateSelectedContacts addObject:finalContact];
+        [self.contactPickerView addContact:finalContact withName:finalContact.name];
     }else{
         [self.contactPickerView clearTextView];
     }
     
     self.filteredContacts = self.contacts;
+    [self.contactPickerView open];
+    [self.contactsTableView reloadData];
 }
 
 - (BOOL)existsSameInPrivateContacts:(THContact *)contact{
@@ -318,6 +326,17 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     }
         
     return NO;
+}
+
+-(THContact *)contactFromContacts:(THContact *)incomingContact{
+    for(THContact *cont in self.contacts){
+        if([incomingContact.name isEqualToString:cont.name] &&
+           [incomingContact.phoneNumber isEqualToString:cont.phoneNumber]){
+            return cont;
+        }
+    }
+    
+    return incomingContact;
 }
 
 - (void)clear{
