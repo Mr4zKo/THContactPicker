@@ -56,6 +56,14 @@
     return self;
 }
 
+-(BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event
+{
+    if ( CGRectContainsPoint(self.addContactButton.frame, point) )
+        return YES;
+    
+    return [super pointInside:point withEvent:event];
+}
+
 - (void)setup {
     
     self.verticalPadding = kVerticalViewPadding;
@@ -91,6 +99,7 @@
     
     self.addContactButton = [[UIButton alloc] init];
     [self addSubview:self.addContactButton];
+    [self.addContactButton setContentMode:UIViewContentModeBottom];
     
     // Add shadow to bottom border
     self.backgroundColor = [UIColor whiteColor];
@@ -390,9 +399,12 @@
     self.closedLabel.frame = CGRectMake(0, 2, self.scrollView.frame.size.width, textViewHeight);
     
     // Check if we can add the text field on the same line as the last contact bubble
-    if (self.frame.size.width - kHorizontalSidePadding - frameOfLastBubble.origin.x - frameOfLastBubble.size.width - minWidth >= 0){ // add to the same line
+    // countedWidth-3 - to go to next line on time
+    NSInteger countedWidth = self.scrollView.frame.size.width - kHorizontalSidePadding - frameOfLastBubble.origin.x - frameOfLastBubble.size.width;
+    if (countedWidth - minWidth >= 0 &&
+        countedWidth-3 > [self.textView.text sizeWithAttributes:@{NSFontAttributeName:self.textView.font}].width){ // add to the same line
         textViewFrame.origin.x = frameOfLastBubble.origin.x + frameOfLastBubble.size.width + kHorizontalPadding;
-        textViewFrame.size.width = self.frame.size.width - textViewFrame.origin.x;
+        textViewFrame.size.width = self.scrollView.frame.size.width - textViewFrame.origin.x;
     } else { // place text view on the next line
         lineCount++;
         
@@ -446,9 +458,9 @@
         closedLabelFrame.size.width = self.scrollView.frame.size.width;
         self.closedLabel.frame = closedLabelFrame;
         
-        int contactButtonXpos = newFrame.origin.x+newFrame.size.width+2;
-        int contactButtonYpos = 2;
-        self.addContactButton.frame = CGRectMake(contactButtonXpos, contactButtonYpos, 22, 22);
+        int contactButtonXpos = newFrame.origin.x+newFrame.size.width+2-7;
+        int contactButtonYpos = 2-7;
+        self.addContactButton.frame = CGRectMake(contactButtonXpos, contactButtonYpos, 36, 36);
         [self.addContactButton addTarget:self action:@selector(addContactPressed:) forControlEvents:UIControlEventTouchUpInside];
         
         if ([self.delegate respondsToSelector:@selector(contactPickerDidResize:)]){

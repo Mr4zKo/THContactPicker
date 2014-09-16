@@ -45,8 +45,9 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
 -(void)setDelegatesFillWithData{
     
     ABAddressBookRef addressBook = ABAddressBookCreateWithOptions(nil, NULL);
+    ABAuthorizationStatus authorizationStatus = ABAddressBookGetAuthorizationStatus();
     
-    if (ABAddressBookGetAuthorizationStatus() == kABAuthorizationStatusNotDetermined) {
+    if (authorizationStatus == kABAuthorizationStatusNotDetermined) {
         ABAddressBookRequestAccessWithCompletion(addressBook, ^(bool granted, CFErrorRef error) {
             if(granted){
                 NSLog(@"access granted");
@@ -55,9 +56,12 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
                 NSLog(@"access not granted");
             }
         });
+    }else if(authorizationStatus == kABAuthorizationStatusAuthorized){
+        self.contacts = [self contactsFromAddressBook];
+    }else{
+        self.contacts = [[NSArray alloc] init];
     }
     
-    self.contacts = [self contactsFromAddressBook];
     [self.contactPickerView setDelegate:self];
     [self.contactsTableView setDelegate:self];
     [self.contactsTableView setDataSource:self];
