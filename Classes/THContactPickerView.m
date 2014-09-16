@@ -402,7 +402,7 @@
     // countedWidth-3 - to go to next line on time
     NSInteger countedWidth = self.scrollView.frame.size.width - kHorizontalSidePadding - frameOfLastBubble.origin.x - frameOfLastBubble.size.width;
     if (countedWidth - minWidth >= 0 &&
-        countedWidth-3 > [self.textView.text sizeWithAttributes:@{NSFontAttributeName:self.textView.font}].width){ // add to the same line
+        countedWidth-3 > [self getTextWidth:self.textView.text forFont:self.textView.font]){ // add to the same line
         textViewFrame.origin.x = frameOfLastBubble.origin.x + frameOfLastBubble.size.width + kHorizontalPadding;
         textViewFrame.size.width = self.scrollView.frame.size.width - textViewFrame.origin.x;
     } else { // place text view on the next line
@@ -486,6 +486,14 @@
         }
         
         return;
+    }
+}
+
+-(NSInteger)getTextWidth:(NSString *)text forFont:(UIFont *)font{
+    if([[[UIDevice currentDevice] systemVersion] floatValue]>=7.0f){
+        return [text sizeWithAttributes:@{NSFontAttributeName:self.textView.font}].width;
+    }else{
+        return [text sizeWithFont:font].width;
     }
 }
 
