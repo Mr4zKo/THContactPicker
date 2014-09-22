@@ -13,6 +13,8 @@
 @protocol THContactPickerNotifDelegate
 -(void)contactPickerUpdatedHeight;
 -(void)contactPickerAddContactButtonClicked;
+-(void)contactPickerAddedContact;
+
 @end
 
 @interface THContactPicker : NSObject <THContactPickerDelegate, UITableViewDataSource, UITableViewDelegate>

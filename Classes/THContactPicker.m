@@ -184,6 +184,7 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
         [self.privateSelectedContacts addObject:contact];
         cell.accessoryType = UITableViewCellAccessoryCheckmark;
         [self.contactPickerView addContact:contact withName:contactTilte];
+        [self.delegate contactPickerAddedContact];
     }
     
     self.filteredContacts = self.contacts;
