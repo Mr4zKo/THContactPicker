@@ -8,6 +8,8 @@
 
 #import "THContactTextField.h"
 
+#define IS_OS_8_OR_LATER    ([[[UIDevice currentDevice] systemVersion] floatValue] >= 8.0)
+
 @implementation THContactTextField
 
 - (id)init {
@@ -32,7 +34,33 @@
     [super deleteBackward];
 }
 
+// warning private
+- (BOOL)keyboardInputShouldDelete:(UITextField *)textField {
+    BOOL shouldDelete = YES;
+    
+    if ([UITextField instancesRespondToSelector:_cmd]) {
+        BOOL (*keyboardInputShouldDelete)(id, SEL, UITextField *) = (BOOL (*)(id, SEL, UITextField *))[UITextField instanceMethodForSelector:_cmd];
+        
+        if (keyboardInputShouldDelete) {
+            shouldDelete = keyboardInputShouldDelete(self, _cmd, textField);
+        }
+    }
+    
+    if (![textField.text length] && IS_OS_8_OR_LATER) {
+        [self deleteBackward];
+    }
+    
+    return shouldDelete;
+}
+
 - (void)textFieldTextDidChange:(NSNotification *)notification {
+    
+    if([self.text length]<1){
+        if ([self.delegate respondsToSelector:@selector(textFieldDidHitBackspaceWithEmptyText:)]){
+            [self.delegate textFieldDidHitBackspaceWithEmptyText:self];
+        }
+        return;
+    }
 
     if([[self text] isEqualToString:@"  "]){
         [self setText:@" "];

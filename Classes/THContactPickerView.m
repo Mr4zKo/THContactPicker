@@ -160,7 +160,7 @@
 - (void)addContact:(id)contact withName:(NSString *)name {
     id contactKey = [NSValue valueWithNonretainedObject:contact];
     if ([self.contactKeys containsObject:contactKey]){
-        NSLog(@"Cannot add the same object twice to ContactPickerView");
+        //NSLog(@"Cannot add the same object twice to ContactPickerView");
         return;
     }
     if (self.contactKeys.count == 1 && self.limitToOne){
@@ -625,10 +625,8 @@
 #pragma mark - View control
 
 -(void) close{
-    NSLog(@"close called");
     
     if (self.selectedContactBubble){
-        NSLog(@"unselecting selected");
         [self.selectedContactBubble unSelect];
         self.selectedContactBubble = nil;
     }
@@ -679,8 +677,6 @@
 }
 
 -(void)unselectSelectedBubble{
-    
-    NSLog(@"unselecting selected");
     
     if (self.selectedContactBubble){
         [self.selectedContactBubble unSelect];

@@ -44,16 +44,27 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
 
 -(void)setDelegatesFillWithData{
     
+    [self refreshContacts];
+    
+    [self.contactPickerView setDelegate:self];
+    [self.contactsTableView setDelegate:self];
+    [self.contactsTableView setDataSource:self];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidHide:) name:UIKeyboardDidHideNotification object:nil];
+}
+
+- (void)refreshContacts{
     ABAddressBookRef addressBook = ABAddressBookCreateWithOptions(nil, NULL);
     ABAuthorizationStatus authorizationStatus = ABAddressBookGetAuthorizationStatus();
     
     if (authorizationStatus == kABAuthorizationStatusNotDetermined) {
         ABAddressBookRequestAccessWithCompletion(addressBook, ^(bool granted, CFErrorRef error) {
             if(granted){
-                NSLog(@"access granted");
+                
                 self.contacts = [self contactsFromAddressBook];
             }else{
-                NSLog(@"access not granted");
+                
             }
         });
     }else if(authorizationStatus == kABAuthorizationStatusAuthorized){
@@ -62,12 +73,7 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
         self.contacts = [[NSArray alloc] init];
     }
     
-    [self.contactPickerView setDelegate:self];
-    [self.contactsTableView setDelegate:self];
-    [self.contactsTableView setDataSource:self];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidHide:) name:UIKeyboardDidHideNotification object:nil];
+    [self.contactsTableView reloadData];
 }
 
 -(void)dealloc{
@@ -263,7 +269,7 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
 
 #pragma  mark - AddressBook
 -(NSArray *)contactsFromAddressBook{
-    NSLog(@"v kontaktoch");
+
     ABAddressBookRef addressBook = ABAddressBookCreateWithOptions(nil, NULL);
     
     CFArrayRef all = ABAddressBookCopyArrayOfAllPeople(addressBook);

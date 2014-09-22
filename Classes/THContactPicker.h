@@ -38,4 +38,6 @@
 - (NSUInteger)selectedContactsCount;
 - (NSArray *)selectedContacts;
 
+- (void)refreshContacts;
+
 @end
