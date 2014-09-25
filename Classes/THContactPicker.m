@@ -88,13 +88,19 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
         [self.contactsTableView setHidden:YES];
     } else {
         self.filteredContacts = [self filteredContactsByText:textViewText];
-        [self.contactsTableView setHidden:NO];
+        
+        if(self.filteredContacts.count>0){
+            [self.contactsTableView setHidden:NO];
+        }else{
+            [self.contactsTableView setHidden:YES];
+        }
     }
     
     [self.contactsTableView setFrame:CGRectMake(self.contactsTableView.frame.origin.x,
-                                                self.contactPickerView.frame.origin.y+self.contactPickerView.frame.size.height,
+                                                [self contactsTableVerticalPosition],
                                                 self.contactsTableView.frame.size.width,
-                                                self.view.frame.size.height-self.contactPickerView.frame.size.height)];
+                                                [self contactsTableHeight])];
+    
     [self.delegate contactPickerUpdatedHeight];
     [self.contactsTableView reloadData];
 }
@@ -117,12 +123,12 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     NSInteger index = [self.contacts indexOfObject:contact];
     UITableViewCell *cell = [self.contactsTableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:index inSection:0]];
     cell.accessoryType = UITableViewCellAccessoryNone;
-    [self didChangeSelectedItems];
 }
 
 - (void)contactPickerDidResize:(THContactPickerView *)contactPickerView{
     CGRect frame = self.contactsTableView.frame;
     frame.origin.y = contactPickerView.frame.size.height + contactPickerView.frame.origin.y;
+    frame.size.height = [self contactsTableHeight];
     self.contactsTableView.frame = frame;
     [self.delegate contactPickerUpdatedHeight];
 }
@@ -175,9 +181,11 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
     
     id contact = [self.filteredContacts objectAtIndex:indexPath.row];
-    NSString *contactTilte = [self titleForRowAtIndexPath:indexPath];
+    NSString *contactTilte = [(THContact *)contact name];
     if([contactTilte isEqualToString:@""]){
-        contactTilte = [self phoneNumberForRowAtIndexPath:indexPath];
+        if([((THContact *)contact).phoneNumbers count]>0){
+            contactTilte = [((THContact *)contact).phoneNumbers objectAtIndex:0];
+        }
     }
     
     if(![self.privateSelectedContacts containsObject:contact]){
@@ -209,22 +217,14 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     return _filteredContacts;
 }
 
-- (void)adjustTableViewInsetTop:(CGFloat)topInset bottom:(CGFloat)bottomInset {
-    self.contactsTableView.contentInset = UIEdgeInsetsMake(topInset,
-                                                   self.contactsTableView.contentInset.left,
-                                                   bottomInset,
-                                                   self.contactsTableView.contentInset.right);
-    self.contactsTableView.scrollIndicatorInsets = self.contactsTableView.contentInset;
-}
-
 - (NSInteger)selectedCount {
     return self.privateSelectedContacts.count;
 }
 
 - (void)adjustTableFrame {
-    CGFloat yOffset = self.contactPickerView.frame.origin.y + self.contactPickerView.frame.size.height;
+    CGFloat yOffset = [self contactsTableVerticalPosition];
     
-    CGRect tableFrame = CGRectMake(0, yOffset, self.view.frame.size.width, self.view.frame.size.height - yOffset);
+    CGRect tableFrame = CGRectMake(0, yOffset, self.view.frame.size.width, [self contactsTableHeight]);
     self.contactsTableView.frame = tableFrame;
     [self.delegate contactPickerUpdatedHeight];
 }
@@ -240,32 +240,30 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
 
 #pragma mark - Private methods
 
-- (void)adjustTableViewInsetTop:(CGFloat)topInset {
-    [self adjustTableViewInsetTop:topInset bottom:self.contactsTableView.contentInset.bottom];
-}
-
-- (void)adjustTableViewInsetBottom:(CGFloat)bottomInset {
-    [self adjustTableViewInsetTop:self.contactsTableView.contentInset.top bottom:bottomInset];
-}
-
 - (void)configureCell:(THContactTableViewCell *)cell atIndexPath:(NSIndexPath *)indexPath {
-    [cell.nameLabel setText:[self titleForRowAtIndexPath:indexPath]];
-    [cell.numberLabel setText:[self phoneNumberForRowAtIndexPath:indexPath]];
+    [cell.nameLabel setAttributedText:[self titleForRowAtIndexPath:indexPath]];
+    [cell.numberLabel setAttributedText:[self phoneNumberForRowAtIndexPath:indexPath]];
 }
 
-- (NSString *)titleForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (NSAttributedString *)titleForRowAtIndexPath:(NSIndexPath *)indexPath {
     THContact *contact = [self.filteredContacts objectAtIndex:indexPath.row];
-    NSString *title = [contact name];
+    NSAttributedString *title = [contact attributedNameLabel];
     return title;
 }
 
-- (NSString *)phoneNumberForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (NSMutableAttributedString *)phoneNumberForRowAtIndexPath:(NSIndexPath *)indexPath {
     THContact *contact = [self.filteredContacts objectAtIndex:indexPath.row];
-    return [[contact phoneNumbers] objectAtIndex:0];
+    return [contact attributedNumberLabel];
 }
 
-- (void) didChangeSelectedItems {
-    
+-(float)contactsTableHeight{
+    int tabBarHeight = 49;
+    return self.view.frame.size.height-self.contactPickerView.frame.size.height-self.contactPickerView.frame.origin.y-tabBarHeight;
+}
+
+-(float)contactsTableVerticalPosition{
+    int delta = 2;
+    return self.contactPickerView.frame.origin.y+self.contactPickerView.frame.size.height+delta;
 }
 
 #pragma  mark - AddressBook
@@ -287,12 +285,22 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
         CFTypeRef phoneProperty = ABRecordCopyValue(ref, kABPersonPhoneProperty);
         
         NSArray *phones = (__bridge_transfer NSArray *)ABMultiValueCopyArrayOfAllValues(phoneProperty);
+
         CFRelease(phoneProperty);
+        int counter = 0;
         for (NSString *phone in phones){
             THContact *contact = [[THContact alloc] init];
             [contact setName:compositeName];
+            
+            CFStringRef ref = ABMultiValueCopyLabelAtIndex(phoneProperty, counter);
+            NSString *type = (__bridge_transfer NSString *)ABAddressBookCopyLocalizedLabel(ref);
+            
+            [contact setType:type];
             [contact addPhoneNumber:phone];
             [contactsArray addObject:contact];
+            
+            CFRelease(ref);
+            counter++;
         }
     }
     
@@ -307,13 +315,11 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
 - (void)keyboardDidShow:(NSNotification *)notification {
     NSDictionary *info = [notification userInfo];
     CGRect kbRect = [self.view convertRect:[[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue] fromView:self.view.window];
-    [self adjustTableViewInsetBottom:self.contactsTableView.frame.origin.y + self.contactsTableView.frame.size.height - kbRect.origin.y];
 }
 
 - (void)keyboardDidHide:(NSNotification *)notification {
     NSDictionary *info = [notification userInfo];
     CGRect kbRect = [self.view convertRect:[[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue] fromView:self.view.window];
-    [self adjustTableViewInsetBottom:self.contactsTableView.frame.origin.y + self.contactsTableView.frame.size.height - kbRect.origin.y];
 }
 
 - (void)addContact:(THContact *)contact{

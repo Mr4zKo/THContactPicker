@@ -11,7 +11,10 @@
 @interface THContact : NSObject
 
 @property(nonatomic, strong) NSString *name;
+@property(nonatomic, strong) NSString *type;
 @property(nonatomic, strong) NSMutableArray *phoneNumbers;
+@property(nonatomic, strong) NSMutableAttributedString *attributedNameLabel;
+@property(nonatomic, strong) NSMutableAttributedString *attributedNumberLabel;
 
 -(void)addPhoneNumber:(NSString*)number;
 -(BOOL)matchesFilterString:(NSString *)filterString;

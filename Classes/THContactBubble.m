@@ -97,6 +97,7 @@
     [self addSubview:self.label];
     
     self.textView = [[UITextView alloc] init];
+    self.textView.autocorrectionType = UITextAutocorrectionTypeNo;
     self.textView.delegate = self;
     self.textView.hidden = YES;
     [self addSubview:self.textView];

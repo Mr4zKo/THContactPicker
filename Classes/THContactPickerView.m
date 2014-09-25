@@ -396,7 +396,7 @@
     
     //now closed view
     // aby sa vyska dorovnala so scroll viewom
-    self.closedLabel.frame = CGRectMake(0, 2, self.scrollView.frame.size.width, textViewHeight);
+    self.closedLabel.frame = CGRectMake(0, 2, self.scrollView.frame.size.width, textViewHeight+2); // to fix 1088 bug open keyboard with wrong focus
     
     // Check if we can add the text field on the same line as the last contact bubble
     // countedWidth-3 - to go to next line on time
