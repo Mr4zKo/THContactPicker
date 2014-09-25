@@ -46,17 +46,23 @@
 
 -(BOOL)matchesFilterString:(NSString *)filterString{
     
-    if([self string:self.nameNoDiacritics containsSubstring:filterString]){
+    NSString *trimed = filterString;
+    
+    if([trimed hasPrefix:@" "]){
+        trimed = [trimed substringFromIndex:1];
+    }
+    
+    if([self string:self.nameNoDiacritics containsSubstring:trimed]){
         
-        [self generateSpannableStringsForSubstring:filterString];
+        [self generateSpannableStringsForSubstring:trimed];
         
         return YES;
     }
     
     for(int i=0; i<[self.phoneNumbers count]; i++){
-        if([self string:[self.phoneNumbers objectAtIndex:i] containsSubstring:filterString]){
+        if([self string:[self.phoneNumbers objectAtIndex:i] containsSubstring:trimed]){
             
-            [self generateSpannableStringsForSubstring:filterString];
+            [self generateSpannableStringsForSubstring:trimed];
             
             return YES;
         }
@@ -70,10 +76,18 @@
     NSString *lowerCaseString = [string lowercaseString];
     NSString *lowerCaseSubstring = [substring lowercaseString];
     
-    NSRange range = [lowerCaseString rangeOfString: lowerCaseSubstring];
-    BOOL found = (range.location!=NSNotFound);
+    NSArray *stringArray = [lowerCaseString componentsSeparatedByString:@" "];
+    NSArray *substringArray = [lowerCaseSubstring componentsSeparatedByString:@" "];
     
-    return found;
+    for(NSString *str in stringArray){
+        for(NSString *substr in substringArray){
+            if([str hasPrefix:substr]){
+                return YES;
+            }
+        }
+    }
+    
+    return NO;
 }
 
 -(void)generateSpannableStringsForSubstring:(NSString *)substring{
@@ -115,20 +129,12 @@
     for(int i=0; i<nameComponents.count; i++){
         
         NSString *namePart = [nameComponents objectAtIndex:i];
-        NSString *namePartLeft = @"";
-        if(i>0){
-            namePartLeft = [nameComponents objectAtIndex:i-1];
-        }
         
         if([self string:namePart containsSubstring:substring]){
                
             [attrNameString setAttributes:boldAttrs range:NSMakeRange(lastNameEndPosition, [namePart length])];
            
-        }else if([substring rangeOfString:@" "].location != NSNotFound &&
-                 ([self string:[NSString stringWithFormat:@"%@ %@", namePartLeft ,namePart] containsSubstring:substring])){
-               
-               [attrNameString setAttributes:boldAttrs range:NSMakeRange(lastNameEndPosition, [namePart length])];
-           }
+        }
         
         lastNameEndPosition = lastNameEndPosition + [namePart length]+1;
     }
