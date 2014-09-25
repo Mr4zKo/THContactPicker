@@ -52,7 +52,7 @@
         trimed = [trimed substringFromIndex:1];
     }
     
-    if([self string:self.nameNoDiacritics containsSubstring:trimed]){
+    if([self string:self.nameNoDiacritics containsSubstring:trimed oneMatchEnough:NO]){
         
         [self generateSpannableStringsForSubstring:trimed];
         
@@ -60,7 +60,7 @@
     }
     
     for(int i=0; i<[self.phoneNumbers count]; i++){
-        if([self string:[self.phoneNumbers objectAtIndex:i] containsSubstring:trimed]){
+        if([self string:[self.phoneNumbers objectAtIndex:i] containsSubstring:trimed oneMatchEnough:NO]){
             
             [self generateSpannableStringsForSubstring:trimed];
             
@@ -71,7 +71,7 @@
     return NO;
 }
 
-- (BOOL)string:(NSString*)string containsSubstring:(NSString *)substring{
+- (BOOL)string:(NSString*)string containsSubstring:(NSString *)substring oneMatchEnough:(BOOL)oneMatchEnough{
     
     NSString *lowerCaseString = [string lowercaseString];
     NSString *lowerCaseSubstring = [substring lowercaseString];
@@ -79,15 +79,33 @@
     NSArray *stringArray = [lowerCaseString componentsSeparatedByString:@" "];
     NSArray *substringArray = [lowerCaseSubstring componentsSeparatedByString:@" "];
     
-    for(NSString *str in stringArray){
-        for(NSString *substr in substringArray){
+    for(NSString *substr in substringArray){
+        if([substr isEqualToString:@""]){
+            continue;
+        }
+        
+        BOOL noThere = YES;
+        
+        for(NSString *str in stringArray){
             if([str hasPrefix:substr]){
-                return YES;
+                noThere = NO;
+                
+                if(oneMatchEnough){
+                    return YES;
+                }
             }
+        }
+        
+        if(noThere && !oneMatchEnough){
+            return NO;
         }
     }
     
-    return NO;
+    if(oneMatchEnough){
+        return NO;
+    }else{
+        return YES;
+    }
 }
 
 -(void)generateSpannableStringsForSubstring:(NSString *)substring{
@@ -113,7 +131,7 @@
                                                  initWithString:[NSString stringWithFormat:@"%@ %@", self.type, phoneNumber] attributes:regSmallAttrs];
         
         if(![substring isEqualToString:@" "] &&
-           [self string:phoneNumber containsSubstring:substring]){
+           [self string:phoneNumber containsSubstring:substring oneMatchEnough:YES]){
             
             [attrNumberString setAttributes:boldSmallAttrs range:NSMakeRange(0, [self.type length])];
         }
@@ -130,7 +148,7 @@
         
         NSString *namePart = [nameComponents objectAtIndex:i];
         
-        if([self string:namePart containsSubstring:substring]){
+        if([self string:namePart containsSubstring:substring oneMatchEnough:YES]){
                
             [attrNameString setAttributes:boldAttrs range:NSMakeRange(lastNameEndPosition, [namePart length])];
            
