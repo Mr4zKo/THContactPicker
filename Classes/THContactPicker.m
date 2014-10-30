@@ -169,9 +169,9 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
         
         NSArray *phones = (__bridge_transfer NSArray *)ABMultiValueCopyArrayOfAllValues(phoneProperty);
         
-        int counter = 0;
+        int counter = -1;
         for (NSString *phone in phones){
-            
+            counter++;
             if(![phone isEqualToString:[contact phoneNumber]]) continue;
             
                         NSString *type;
@@ -185,14 +185,12 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
                             type = @"Phone";
                         }
             
-            counter++;
-            
             ABPersonViewController *picker = [[ABPersonViewController alloc] init];
             picker.displayedPerson = ref;
             // Allow users to edit the person’s information
             picker.allowsEditing = NO;
             picker.editing = NO;
-            [picker setHighlightedItemForProperty:kABPersonPhoneProperty withIdentifier:counter-1];
+            [picker setHighlightedItemForProperty:kABPersonPhoneProperty withIdentifier:counter];
             
             [self.delegate contactPickerShowViewController:picker];
             
