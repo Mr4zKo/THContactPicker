@@ -9,6 +9,7 @@
 #import "THContactPickerView.h"
 #import "THContactBubble.h"
 #import "THContactTextField.h"
+#import <AddressBook/AddressBook.h>
 
 @interface THContactPickerView ()<THContactTextFieldDelegate>{
     BOOL _shouldSelectTextView;
@@ -331,7 +332,7 @@
 
 - (id)contactForContactBubble:(THContactBubble *)contactBubble {
     NSArray *keys = [self.contacts allKeys];
-    
+
     for (id contact in keys){
         if ([[self.contacts objectForKey:contact] isEqual:contactBubble]){
             return contact;
@@ -582,6 +583,12 @@
     if ([self.delegate respondsToSelector:@selector(keyboardReturnClicked)]){
         [self.delegate keyboardReturnClicked];
     }
+}
+
+- (void)contactBubbleShowContactDetail:(THContactBubble *)contactBubble{
+    
+    id contact = [self contactForContactBubble:contactBubble];
+    [self.delegate showViewController:[contact nonretainedObjectValue]];
 }
 
 #pragma mark - Gesture Recognizer

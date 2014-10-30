@@ -14,6 +14,7 @@
 -(void)contactPickerUpdatedHeight;
 -(void)contactPickerAddContactButtonClicked;
 -(void)contactPickerAddedContact;
+-(void)contactPickerShowViewController:(UIViewController *)viewController;
 
 @end
 
@@ -41,5 +42,7 @@
 - (NSArray *)selectedContacts;
 
 - (void)refreshContacts;
+
+-(NSArray *)filteredContactsByText:(NSString *)text;
 
 @end

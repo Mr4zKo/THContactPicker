@@ -21,6 +21,7 @@
 - (void)contactPickerAddContactButtonClicked;
 - (void)keyboardReturnClicked;
 - (void)contactPickerAddContact:(THContact *)contact;
+- (void)showViewController:(id)contactKey;
 
 @end
 

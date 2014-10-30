@@ -45,7 +45,6 @@
 }
 
 -(BOOL)matchesFilterString:(NSString *)filterString{
-    
     NSString *trimed = filterString;
     
     if([trimed hasPrefix:@" "]){
@@ -60,7 +59,9 @@
     }
     
     for(int i=0; i<[self.phoneNumbers count]; i++){
-        if([self string:[self.phoneNumbers objectAtIndex:i] containsSubstring:trimed oneMatchEnough:NO]){
+        trimed = [trimed stringByReplacingOccurrencesOfString:@" " withString:@""];
+
+        if([self string:trimed matchesPhoneNumber:[self.phoneNumbers objectAtIndex:i]]){
             
             [self generateSpannableStringsForSubstring:trimed];
             
@@ -108,13 +109,48 @@
     }
 }
 
+-(BOOL)string:(NSString *)string matchesPhoneNumber:(NSString *)phoneNumber{
+    NSArray *phoneNumberArray = [phoneNumber componentsSeparatedByString:@"\u00a0"];
+    if(phoneNumberArray.count<2){
+        phoneNumberArray = [phoneNumber componentsSeparatedByString:@" "];
+    }
+    NSString *actualStringToCompare = string;
+    
+    BOOL nextHasToMatch = NO;
+    
+    for(int i=0; i<phoneNumberArray.count; i++){
+        NSString *phoneNumberPart = [phoneNumberArray objectAtIndex:i];
+        if([actualStringToCompare length]>=[phoneNumberPart length]){
+            if([actualStringToCompare hasPrefix:phoneNumberPart]){
+                actualStringToCompare = [actualStringToCompare substringFromIndex:[phoneNumberPart length]];
+                nextHasToMatch = YES;
+                continue;
+            }else{
+                if(nextHasToMatch){
+                    break;
+                }
+            }
+        }else{
+            if([phoneNumberPart hasPrefix:actualStringToCompare]){
+                actualStringToCompare = @"";
+            }else{
+                if(nextHasToMatch){
+                    break;
+                }
+            }
+        }
+    }
+    
+    return [actualStringToCompare length]==0?YES:NO;
+}
+
 -(void)generateSpannableStringsForSubstring:(NSString *)substring{
     
-    UIFont *regularSmallFont = [UIFont systemFontOfSize:UIFont.systemFontSize-2];
-    UIFont *boldSmallFont = [UIFont boldSystemFontOfSize:UIFont.systemFontSize-2];
+    UIFont *regularSmallFont = [UIFont systemFontOfSize:15];
+    UIFont *boldSmallFont = [UIFont boldSystemFontOfSize:15];
     
-    UIFont *regularFont = [UIFont systemFontOfSize:UIFont.systemFontSize];
-    UIFont *boldFont = [UIFont boldSystemFontOfSize:UIFont.systemFontSize];
+    UIFont *regularFont = [UIFont systemFontOfSize:17];
+    UIFont *boldFont = [UIFont boldSystemFontOfSize:17];
     
     NSDictionary *regSmallAttrs = [NSDictionary dictionaryWithObjectsAndKeys:
                            regularSmallFont, NSFontAttributeName, nil];
@@ -131,7 +167,7 @@
                                                  initWithString:[NSString stringWithFormat:@"%@ %@", self.type, phoneNumber] attributes:regSmallAttrs];
         
         if(![substring isEqualToString:@" "] &&
-           [self string:phoneNumber containsSubstring:substring oneMatchEnough:YES]){
+           [self string:substring matchesPhoneNumber:phoneNumber]){
             
             [attrNumberString setAttributes:boldSmallAttrs range:NSMakeRange(0, [self.type length])];
         }

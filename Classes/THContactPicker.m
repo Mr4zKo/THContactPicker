@@ -9,6 +9,7 @@
 #import "THContactPicker.h"
 #import "THContactTableViewCell.h"
 #import <AddressBook/AddressBook.h>
+@import AddressBookUI;
 
 @interface THContactPicker()
 
@@ -145,6 +146,64 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
 
 - (void)contactPickerAddContact:(THContact *)contact{
     [self addContact:contact];
+}
+
+- (void)showViewController:(id)contactKey{
+    
+    THContact *contact = contactKey;
+    
+    ABAddressBookRef addressBook = ABAddressBookCreateWithOptions(nil, NULL);
+    
+    CFArrayRef all = ABAddressBookCopyArrayOfAllPeople(addressBook);
+    CFIndex n = ABAddressBookGetPersonCount(addressBook);
+    
+    for( int i = 0 ; i < n ; i++ ){
+        ABRecordRef ref = CFArrayGetValueAtIndex(all, i);
+        
+        NSString* compositeName = (__bridge_transfer NSString *)ABRecordCopyCompositeName(ref);
+        if(compositeName==nil) compositeName=@"";
+        
+        if(![compositeName isEqualToString:[contact name]]) continue;
+        
+        CFTypeRef phoneProperty = ABRecordCopyValue(ref, kABPersonPhoneProperty);
+        
+        NSArray *phones = (__bridge_transfer NSArray *)ABMultiValueCopyArrayOfAllValues(phoneProperty);
+        
+        int counter = 0;
+        for (NSString *phone in phones){
+            
+            if(![phone isEqualToString:[contact phoneNumber]]) continue;
+            
+                        NSString *type;
+                        CFStringRef refString = ABMultiValueCopyLabelAtIndex(phoneProperty, counter);
+                        if(refString!=NULL){
+                            type = (__bridge_transfer NSString *)ABAddressBookCopyLocalizedLabel(refString);
+                            CFRelease(refString);
+                            if(![[contact type] isEqualToString:type]) continue;
+            
+                        }else{
+                            type = @"Phone";
+                        }
+            
+            counter++;
+            
+            ABPersonViewController *picker = [[ABPersonViewController alloc] init];
+            picker.displayedPerson = ref;
+            // Allow users to edit the person’s information
+            picker.allowsEditing = NO;
+            picker.editing = NO;
+            [picker setHighlightedItemForProperty:kABPersonPhoneProperty withIdentifier:counter-1];
+            
+            [self.delegate contactPickerShowViewController:picker];
+            break;
+        }
+        
+        
+        CFRelease(phoneProperty);
+    }
+    
+    CFRelease(addressBook);
+    CFRelease(all);
 }
 
 #pragma mark - UITableView Delegate and Datasource functions
@@ -286,27 +345,32 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
         
         NSArray *phones = (__bridge_transfer NSArray *)ABMultiValueCopyArrayOfAllValues(phoneProperty);
 
-        CFRelease(phoneProperty);
         int counter = 0;
         for (NSString *phone in phones){
             THContact *contact = [[THContact alloc] init];
             [contact setName:compositeName];
             
-            CFStringRef ref = ABMultiValueCopyLabelAtIndex(phoneProperty, counter);
-            NSString *type = (__bridge_transfer NSString *)ABAddressBookCopyLocalizedLabel(ref);
+            NSString *type;
+            CFStringRef refString = ABMultiValueCopyLabelAtIndex(phoneProperty, counter);
+            if(refString!=NULL){
+                type = (__bridge_transfer NSString *)ABAddressBookCopyLocalizedLabel(refString);
+                CFRelease(refString);
+            }else{
+                type = @"Phone";
+            }
             
             [contact setType:type];
             [contact addPhoneNumber:phone];
             [contactsArray addObject:contact];
             
-            CFRelease(ref);
             counter++;
         }
+        
+        CFRelease(phoneProperty);
     }
     
-    CFRelease(addressBook);
     CFRelease(all);
-    
+    CFRelease(addressBook);
     
     return contactsArray;
 }

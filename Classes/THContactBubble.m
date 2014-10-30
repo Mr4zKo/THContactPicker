@@ -187,9 +187,16 @@
 
 - (void)handleTapGesture {
     if (self.isSelected){
-        [self unSelect];
-        if ([self.delegate respondsToSelector:@selector(contactBubbleWasUnSelected:)]){
-            [self.delegate contactBubbleWasUnSelected:self];
+       /*
+        * unselecting after tap on selected bubble
+        */
+//        [self unSelect];
+//        if ([self.delegate respondsToSelector:@selector(contactBubbleWasUnSelected:)]){
+//            [self.delegate contactBubbleWasUnSelected:self];
+//        }
+        
+        if ([self.delegate respondsToSelector:@selector(contactBubbleShowContactDetail:)]){
+            [self.delegate contactBubbleShowContactDetail:self];
         }
     } else {
         [self select];
