@@ -195,7 +195,11 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
             [picker setHighlightedItemForProperty:kABPersonPhoneProperty withIdentifier:counter-1];
             
             [self.delegate contactPickerShowViewController:picker];
-            break;
+            
+            CFRelease(phoneProperty);
+            CFRelease(addressBook);
+            CFRelease(all);
+            return;
         }
         
         
