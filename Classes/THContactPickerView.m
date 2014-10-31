@@ -502,14 +502,13 @@
 
 - (void)textFieldDidHitBackspaceWithEmptyText:(THContactTextField *)textView {
     self.textView.hidden = NO;
-    if (self.contacts.count) {
-        // Capture "delete" key press when cell is empty
-        self.selectedContactBubble = [self.contacts objectForKey:[self.contactKeys lastObject]];
-        [self.selectedContactBubble select];
-    } else {
-        if ([self.delegate respondsToSelector:@selector(contactPickerTextViewDidChange:)]){
-            [self.delegate contactPickerTextViewDidChange:textView.text];
-        }
+    
+    // Capture "delete" key press when cell is empty
+    self.selectedContactBubble = [self.contacts objectForKey:[self.contactKeys lastObject]];
+    [self.selectedContactBubble select];
+        
+    if ([self.delegate respondsToSelector:@selector(contactPickerTextViewDidChange:)]){
+        [self.delegate contactPickerTextViewDidChange:textView.text];
     }
 }
 
@@ -534,23 +533,34 @@
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField{
-    
-    if([[textField text] isEqualToString:@""]){
+    if([textField.text isEqualToString:@""]){
         if ([self.delegate respondsToSelector:@selector(keyboardReturnClicked)]){
             [self.delegate keyboardReturnClicked];
         }
     }else{
-        NSString *contactNameNumber = [textField.text stringByReplacingOccurrencesOfString:@" " withString:@""];
-        THContact *contact = [[THContact alloc] init];
-        contact.name = contactNameNumber;
-        [contact addPhoneNumber:contactNameNumber];
-        
-        if ([self.delegate respondsToSelector:@selector(contactPickerAddContact:)]){
-            [self.delegate contactPickerAddContact:contact];
-        }
+        [self addUnknownContact:[textField text]];
     }
     
     return NO;
+}
+
+-(BOOL)textFieldShouldEndEditing:(UITextField *)textField{
+    if(![textField.text isEqualToString:@""]){
+        [self addUnknownContact:[textField text]];
+    }
+
+    return YES;
+}
+
+-(void)addUnknownContact:(NSString *)text{
+    NSString *contactNameNumber = [text stringByReplacingOccurrencesOfString:@" " withString:@""];
+    THContact *contact = [[THContact alloc] init];
+    contact.name = contactNameNumber;
+    [contact addPhoneNumber:contactNameNumber];
+        
+    if ([self.delegate respondsToSelector:@selector(contactPickerAddContact:)]){
+        [self.delegate contactPickerAddContact:contact];
+    }
 }
 
 #pragma mark - THContactBubbleDelegate Functions

@@ -54,7 +54,6 @@
 }
 
 - (void)textFieldTextDidChange:(NSNotification *)notification {
-    
     if([self.text length]<1){
         if ([self.delegate respondsToSelector:@selector(textFieldDidHitBackspaceWithEmptyText:)]){
             [self.delegate textFieldDidHitBackspaceWithEmptyText:self];
@@ -70,5 +69,4 @@
         [self.delegate textFieldDidChange:self];
     }
 }
-
 @end
