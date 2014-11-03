@@ -266,7 +266,7 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView{
-    [self.contactPickerView resignFirstResponder];
+    [self.contactPickerView resignFirstResponderShouldAddContact:NO];
 }
 
 #pragma mark - Public properties
@@ -329,7 +329,7 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
 
 #pragma  mark - AddressBook
 -(NSArray *)contactsFromAddressBook{
-
+    
     ABAddressBookRef addressBook = ABAddressBookCreateWithOptions(nil, NULL);
     
     CFArrayRef all = ABAddressBookCopyArrayOfAllPeople(addressBook);
@@ -374,7 +374,35 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     CFRelease(all);
     CFRelease(addressBook);
     
+    [self replaceSelectedContactsWithNewOnes:contactsArray];
+    
     return contactsArray;
+}
+
+-(void)replaceSelectedContactsWithNewOnes:(NSArray *)newContacts{
+    
+    NSMutableArray *newSelectedContacts = [[NSMutableArray alloc] init];
+    
+    for(THContact *contact in self.privateSelectedContacts){
+        for(THContact *actoualContact in newContacts){
+            
+            if([contact.name isEqualToString:actoualContact.name] &&
+               [[contact phoneNumber] isEqualToString:[actoualContact phoneNumber]]){
+                
+                [newSelectedContacts addObject:actoualContact];
+                break;
+            }
+            
+        }
+    }
+    
+    [self.contactPickerView removeAllContacts];
+    for(THContact *contact in  newSelectedContacts){
+        [self.contactPickerView addContact:contact withName:contact.name];
+    }
+    
+    [self.privateSelectedContacts removeAllObjects];
+    [self.privateSelectedContacts addObjectsFromArray:newSelectedContacts];
 }
 
 #pragma  mark - NSNotificationCenter

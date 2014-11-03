@@ -36,7 +36,7 @@
 - (void)addContact:(id)contact withName:(NSString *)name;
 - (void)removeContact:(id)contact;
 - (void)removeAllContacts;
-- (void)resignFirstResponder;
+- (void)resignFirstResponderShouldAddContact:(BOOL)shouldAddContact;
 - (BOOL)becomeFirstResponder;
 
 // View Customization

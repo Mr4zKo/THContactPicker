@@ -14,6 +14,7 @@
 @interface THContactPickerView ()<THContactTextFieldDelegate>{
     BOOL _shouldSelectTextView;
     BOOL _closed;
+    BOOL _shouldAddContact;
 }
 
 @property (nonatomic, strong) UIScrollView *scrollView;
@@ -67,6 +68,7 @@
 
 - (void)setup {
     
+    _shouldAddContact = YES;
     self.verticalPadding = kVerticalViewPadding;
     
     self.contacts = [NSMutableDictionary dictionary];
@@ -248,7 +250,8 @@
     [self.closedLabel setTextColor:selectedTextColor];
 }
 
-- (void)resignFirstResponder {
+- (void)resignFirstResponderShouldAddContact:(BOOL)shouldAddContact {
+    _shouldAddContact = NO;
     [self.textView resignFirstResponder];
 }
 
@@ -553,6 +556,12 @@
 }
 
 -(void)addUnknownContact:(NSString *)text{
+    
+    if(!_shouldAddContact){
+        _shouldAddContact = YES;
+        return;
+    }
+    
     NSString *contactNameNumber = [text stringByReplacingOccurrencesOfString:@" " withString:@""];
     THContact *contact = [[THContact alloc] init];
     contact.name = contactNameNumber;
