@@ -250,7 +250,7 @@
     [self.closedLabel setTextColor:selectedTextColor];
 }
 
-- (void)resignFirstResponderShouldAddContact:(BOOL)shouldAddContact {
+- (void)resignFirstResponderShouldntAddContact{
     _shouldAddContact = NO;
     [self.textView resignFirstResponder];
 }
@@ -700,6 +700,10 @@
 
 -(void)clearTextView{
     [self.textView setText:@""];
+}
+
+-(void)allowAddUnknownContact{
+    _shouldAddContact = YES;
 }
 
 -(void)unselectSelectedBubble{

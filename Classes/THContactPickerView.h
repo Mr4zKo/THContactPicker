@@ -36,7 +36,7 @@
 - (void)addContact:(id)contact withName:(NSString *)name;
 - (void)removeContact:(id)contact;
 - (void)removeAllContacts;
-- (void)resignFirstResponderShouldAddContact:(BOOL)shouldAddContact;
+- (void)resignFirstResponderShouldntAddContact;
 - (BOOL)becomeFirstResponder;
 
 // View Customization
@@ -55,5 +55,6 @@
 
 //helpers
 -(void)clearTextView;
+-(void)allowAddUnknownContact;
 
 @end

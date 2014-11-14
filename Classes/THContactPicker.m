@@ -94,6 +94,7 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
             [self.contactsTableView setHidden:NO];
         }else{
             [self.contactsTableView setHidden:YES];
+            [self.contactPickerView allowAddUnknownContact];
         }
     }
     
@@ -266,7 +267,7 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView{
-    [self.contactPickerView resignFirstResponderShouldAddContact:NO];
+    [self.contactPickerView resignFirstResponderShouldntAddContact];
 }
 
 #pragma mark - Public properties
@@ -385,9 +386,9 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     
     for(THContact *contact in self.privateSelectedContacts){
         for(THContact *actoualContact in newContacts){
-            
             if([contact.name isEqualToString:actoualContact.name] &&
-               [[contact phoneNumber] isEqualToString:[actoualContact phoneNumber]]){
+               [[contact phoneNumber] isEqualToString:[actoualContact phoneNumber]] &&
+                [contact.type isEqualToString:actoualContact.type]){
                 
                 [newSelectedContacts addObject:actoualContact];
                 break;
@@ -436,7 +437,8 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     
     for(THContact *cont in self.privateSelectedContacts){
         if([contact.name isEqualToString:cont.name] &&
-           [contact.phoneNumber isEqualToString:cont.phoneNumber]){
+           [contact.phoneNumber isEqualToString:cont.phoneNumber] &&
+           [contact.type isEqualToString:cont.type]){
             return YES;
         }
     }
@@ -447,7 +449,8 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
 -(THContact *)contactFromContacts:(THContact *)incomingContact{
     for(THContact *cont in self.contacts){
         if([incomingContact.name isEqualToString:cont.name] &&
-           [incomingContact.phoneNumber isEqualToString:cont.phoneNumber]){
+           [incomingContact.phoneNumber isEqualToString:cont.phoneNumber] &&
+           [incomingContact.type isEqualToString:cont.type]){
             return cont;
         }
     }
