@@ -385,15 +385,20 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     NSMutableArray *newSelectedContacts = [[NSMutableArray alloc] init];
     
     for(THContact *contact in self.privateSelectedContacts){
+        BOOL foundInContactList = NO;
+        
         for(THContact *actoualContact in newContacts){
             if([contact.name isEqualToString:actoualContact.name] &&
                [[contact phoneNumber] isEqualToString:[actoualContact phoneNumber]] &&
                 [contact.type isEqualToString:actoualContact.type]){
-                
                 [newSelectedContacts addObject:actoualContact];
+                foundInContactList = YES;
                 break;
             }
-            
+        }
+        
+        if(!foundInContactList){
+            [newSelectedContacts addObject:contact];
         }
     }
     
