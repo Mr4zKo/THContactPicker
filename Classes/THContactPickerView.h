@@ -47,7 +47,7 @@
 - (void)setPromptLabelText:(NSString *)text;
 - (void)setFont:(UIFont *)font;
 - (void)setUnselectedFontColor:(UIColor *)unselectedColor;
-- (void)addContactButtonImage:(UIImage *)addContactImage;
+- (void)addContactButtonImage:(UIImage *)addContactImage deltaVertical:(int)deltaVertical;
 
 // View control
 -(void)close;

@@ -15,6 +15,7 @@
     BOOL _shouldSelectTextView;
     BOOL _closed;
     BOOL _shouldAddContact;
+    int _deltaYAddContactButton;
 }
 
 @property (nonatomic, strong) UIScrollView *scrollView;
@@ -68,6 +69,7 @@
 
 - (void)setup {
     
+    _deltaYAddContactButton = 0;
     _shouldAddContact = YES;
     self.verticalPadding = kVerticalViewPadding;
     
@@ -98,7 +100,7 @@
     self.textView = [[THContactTextField alloc] init];
     self.textView.delegate = self;
     self.textView.autocorrectionType = UITextAutocorrectionTypeNo;
-    [self selectTextView];
+    //[self selectTextView];
     
     self.addContactButton = [[UIButton alloc] init];
     [self addSubview:self.addContactButton];
@@ -439,7 +441,7 @@
     
     // Adjust scroll view content size
     CGRect frame = self.bounds;
-    CGFloat maxFrameHeight = 2 * self.lineHeight + 2 * self.verticalPadding; // limit frame to two lines of content
+    CGFloat maxFrameHeight = 5 * self.lineHeight + 2 * self.verticalPadding; // limit frame to two lines of content
     CGFloat newHeight = (lineCount + 1) * self.lineHeight + 2 * self.verticalPadding;
     self.scrollView.contentSize = CGSizeMake(self.scrollView.frame.size.width, newHeight);
     
@@ -463,7 +465,7 @@
         self.closedLabel.frame = closedLabelFrame;
         
         int contactButtonXpos = newFrame.origin.x+newFrame.size.width+2-7;
-        int contactButtonYpos = 2-7;
+        int contactButtonYpos = 2-7+_deltaYAddContactButton;
         self.addContactButton.frame = CGRectMake(contactButtonXpos, contactButtonYpos, 36, 36);
         [self.addContactButton addTarget:self action:@selector(addContactPressed:) forControlEvents:UIControlEventTouchUpInside];
         
@@ -687,7 +689,8 @@
     [self open];
 }
 
--(void)addContactButtonImage:(UIImage *)addContactImage{
+-(void)addContactButtonImage:(UIImage *)addContactImage  deltaVertical:(int)deltaVertical{
+    _deltaYAddContactButton = deltaVertical;
     [self.addContactButton setImage:addContactImage forState:UIControlStateNormal];
 }
 
