@@ -718,21 +718,18 @@
 }
 
 -(NSString *)generateClosedLabelString{
+    
+    NSString *finalString = @"";
+        
     if(self.contactKeys.count>0){
-        NSString *finalString = [(THContact *)[(NSValue *)[self.contactKeys objectAtIndex:0] nonretainedObjectValue] name];
+        finalString = [(THContact *)[(NSValue *)[self.contactKeys objectAtIndex:0] nonretainedObjectValue] name];
         
         if(self.contactKeys.count>1){
-            for(int i=1; i<[self.contactKeys count]; i++){
-                NSValue *val = (NSValue *)[self.contactKeys objectAtIndex:i];
-                THContact *contact = (THContact *)[val nonretainedObjectValue];
-                finalString = [NSString stringWithFormat:@"%@, %@", finalString, [contact name]];
-            }
+            finalString = [NSString stringWithFormat:@"%@ +%d",finalString, self.contactKeys.count-1];
         }
-        
-        return [NSString stringWithFormat:@"%@",finalString];
-    }else{
-        return @"";
     }
+    
+    return finalString;
 }
 
 @end
