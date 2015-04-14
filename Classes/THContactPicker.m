@@ -74,7 +74,26 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
         self.contacts = [[NSArray alloc] init];
     }
     
+    [self refreshSelectedContacts];
     [self.contactsTableView reloadData];
+}
+
+-(void)refreshSelectedContacts{
+    for(THContact *cont in self.privateSelectedContacts){
+        if([cont.name isEqualToString:cont.phoneNumber]){
+            THContact *finalContact = [self contactConsiderJustNumber:cont];
+            if(![finalContact isEqual:cont]){
+                [cont setName:finalContact.name];
+            }
+        }
+        
+    }
+    
+    NSArray *contactsToAdd = [NSArray arrayWithArray:self.privateSelectedContacts];
+    [self clear];
+    for(THContact *contact in contactsToAdd){
+        [self addContact:contact];
+    }
 }
 
 -(void)dealloc{
@@ -207,6 +226,60 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     
     CFRelease(addressBook);
     CFRelease(all);
+    
+    // if it gets here compare just normalized phone numbers
+    [self showViewControllerConsiderJustNormalizedPhoneNumbers:contactKey];
+}
+
+// ak not contact found regulary, try to find contact just by number
+- (void)showViewControllerConsiderJustNormalizedPhoneNumbers:(id)contactKey{
+    
+    THContact *contact = contactKey;
+    
+    ABAddressBookRef addressBook = ABAddressBookCreateWithOptions(nil, NULL);
+    
+    CFArrayRef all = ABAddressBookCopyArrayOfAllPeople(addressBook);
+    CFIndex n = ABAddressBookGetPersonCount(addressBook);
+    
+    for( int i = 0 ; i < n ; i++ ){
+        ABRecordRef ref = CFArrayGetValueAtIndex(all, i);
+        
+        CFTypeRef phoneProperty = ABRecordCopyValue(ref, kABPersonPhoneProperty);
+        
+        NSArray *phones = (__bridge_transfer NSArray *)ABMultiValueCopyArrayOfAllValues(phoneProperty);
+        
+        int counter = -1;
+        for (NSString *phone in phones){
+            counter++;
+            
+            NSString *normalizedPhone = [THContactPicker normalizeTelephoneNumber:phone];
+            NSString *normalizedContactPhone = [THContactPicker normalizeTelephoneNumber:[contact phoneNumber]];
+            
+            if(![normalizedPhone isEqualToString:normalizedContactPhone]) continue;
+            
+            ABPersonViewController *picker = [[ABPersonViewController alloc] init];
+            picker.displayedPerson = ref;
+            // Allow users to edit the person’s information
+            picker.allowsEditing = NO;
+            picker.editing = NO;
+            [picker setHighlightedItemForProperty:kABPersonPhoneProperty withIdentifier:counter];
+            
+            [self.delegate contactPickerShowViewController:picker];
+            
+            CFRelease(phoneProperty);
+            CFRelease(addressBook);
+            CFRelease(all);
+            return;
+        }
+        
+        
+        CFRelease(phoneProperty);
+    }
+    
+    CFRelease(addressBook);
+    CFRelease(all);
+    
+    [self.delegate contactPickerShowAddUnknownNumberIntoContacts:contact];
 }
 
 #pragma mark - UITableView Delegate and Datasource functions
@@ -427,6 +500,11 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     if(![self.privateSelectedContacts containsObject:contact] &&
        ![self existsSameInPrivateContacts:contact]){
         THContact *finalContact = [self contactFromContacts:contact];
+        
+        if([contact.name isEqualToString:contact.phoneNumber]){
+            finalContact = [self contactConsiderJustNumber:contact];
+        }
+        
         [self.privateSelectedContacts addObject:finalContact];
         [self.contactPickerView addContact:finalContact withName:finalContact.name];
     }else{
@@ -461,6 +539,62 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     }
     
     return incomingContact;
+}
+
+-(THContact *)contactConsiderJustNumber:(THContact *)incomingContact{
+    
+    for(THContact *cont in self.contacts){
+        NSString *contPhoneNorm = [THContactPicker normalizeTelephoneNumber:cont.phoneNumber];
+        NSString *incomingPhoneNorm = [THContactPicker normalizeTelephoneNumber:incomingContact.phoneNumber];
+        if([incomingPhoneNorm isEqualToString:contPhoneNorm]){
+            return cont;
+        }
+    }
+    
+    return incomingContact;
+}
+
+//TODO: normalizacia je 2 krat lebo picker z podu si nemoze brat normalizovane cislo z waletu
++ (NSString*)normalizeTelephoneNumber:(NSString*)telephoneNumber
+{
+    if (!telephoneNumber) return nil;
+    NSString* newTelephoneNumber = [THContactPicker cleanTelephoneNumber:telephoneNumber];
+    
+    /*
+     // replace 09 by +4219
+     if ([newTelephoneNumber length] >= 2)
+     newTelephoneNumber = [newTelephoneNumber stringByReplacingOccurrencesOfString:@"09" withString:@"+4219" options:0 range:NSMakeRange(0, 2)];
+     */
+    
+    // replace 421 with +421
+    if ([newTelephoneNumber length] >= 3)
+        newTelephoneNumber = [newTelephoneNumber stringByReplacingOccurrencesOfString:@"421" withString:@"+421" options:0 range:NSMakeRange(0, 3)];
+    
+    // replace 420 with +420
+    if ([newTelephoneNumber length] >= 3)
+        newTelephoneNumber = [newTelephoneNumber stringByReplacingOccurrencesOfString:@"420" withString:@"+420" options:0 range:NSMakeRange(0, 3)];
+    
+    // replace 00 with +
+    if ([newTelephoneNumber length] >= 2)
+        newTelephoneNumber = [newTelephoneNumber stringByReplacingOccurrencesOfString:@"00" withString:@"+" options:0 range:NSMakeRange(0, 2)];
+    
+    // replace 0 with +421
+    if ([newTelephoneNumber length] >= 1)
+        newTelephoneNumber = [newTelephoneNumber stringByReplacingOccurrencesOfString:@"0" withString:@"+421" options:0 range:NSMakeRange(0, 1)];
+    
+    return newTelephoneNumber;
+}
+
++ (NSString*)cleanTelephoneNumber:(NSString*)telephoneNumber
+{
+    if (!telephoneNumber) return nil;
+    NSString* newTelephoneNumber = [NSString stringWithString:telephoneNumber];
+    
+    // remove characters: '(' ')' '-' '.' ' '
+    NSMutableCharacterSet* characters = [NSMutableCharacterSet characterSetWithCharactersInString:@"()-."];
+    [characters formUnionWithCharacterSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    newTelephoneNumber = [[newTelephoneNumber componentsSeparatedByCharactersInSet:characters] componentsJoinedByString:@""];
+    return newTelephoneNumber;
 }
 
 - (void)clear{

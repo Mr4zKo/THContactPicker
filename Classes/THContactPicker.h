@@ -15,6 +15,7 @@
 -(void)contactPickerAddContactButtonClicked;
 -(void)contactPickerAddedContact;
 -(void)contactPickerShowViewController:(UIViewController *)viewController;
+-(void)contactPickerShowAddUnknownNumberIntoContacts:(THContact *)contact;
 
 @end
 
