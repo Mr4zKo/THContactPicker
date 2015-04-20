@@ -14,6 +14,7 @@
 @interface THContactPickerView ()<THContactTextFieldDelegate>{
     BOOL _shouldSelectTextView;
     BOOL _closed;
+    BOOL _closing;
     BOOL _shouldAddContact;
     int _deltaYAddContactButton;
 }
@@ -123,6 +124,7 @@
     _closed = YES;
     self.closedLabel = [[UILabel alloc] init];
     [self.closedLabel setUserInteractionEnabled:YES];
+    [self.closedLabel setLineBreakMode:NSLineBreakByTruncatingMiddle];
     UITapGestureRecognizer *tg = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tappedClosedLabel)];
     [self.closedLabel addGestureRecognizer:tg];
     [self addSubview:self.closedLabel];
@@ -476,7 +478,7 @@
     }
     
     // Show placeholder if no there are no contacts
-    if (self.contacts.count == 0){
+    if (self.textView.text.length == 0 && self.contacts.count == 0){
         self.placeholderLabel.hidden = NO;
     } else {
         self.placeholderLabel.hidden = YES;
@@ -530,10 +532,13 @@
     // Capture "delete" key press when cell is empty
     self.selectedContactBubble = [self.contacts objectForKey:[self.contactKeys lastObject]];
     [self.selectedContactBubble select];
-        
+    
+    [self textFieldDidChange:textView];
+    /*
     if ([self.delegate respondsToSelector:@selector(contactPickerTextViewDidChange:)]){
         [self.delegate contactPickerTextViewDidChange:textView.text];
     }
+    */
 }
 
 - (void)textFieldDidChange:(THContactTextField *)textView{
@@ -552,11 +557,13 @@
     
     [self layoutView];
     
+    /*
     if ([textView.text isEqualToString:@""] && self.contacts.count == 0){
         self.placeholderLabel.hidden = NO;
     } else {
         self.placeholderLabel.hidden = YES;
     }
+    */
     
     CGPoint offset = self.scrollView.contentOffset;
     offset.y = self.scrollView.contentSize.height - self.scrollView.frame.size.height;
@@ -572,6 +579,10 @@
         }
     }else{
         [self addUnknownContact:[textField text]];
+        
+        if ([self.delegate respondsToSelector:@selector(keyboardReturnClicked)]){
+            [self.delegate keyboardReturnClicked];
+        }
     }
     
     return NO;
@@ -579,7 +590,10 @@
 
 -(BOOL)textFieldShouldEndEditing:(UITextField *)textField{
     if(![textField.text isEqualToString:@""]){
+        _closing = YES;
         [self addUnknownContact:[textField text]];
+        [self.closedLabel setText:[self textForClosedLabel:self.closedLabel]];
+        _closing = NO;
     }
 
     return YES;
@@ -692,7 +706,7 @@
     
     _closed = YES;
     
-    [self.closedLabel setText:[self generateClosedLabelString]];
+    [self.closedLabel setText:[self textForClosedLabel:self.closedLabel]];
     
     [self.closedLabel setHidden:NO];
     [self.scrollView setHidden:YES];
@@ -702,6 +716,10 @@
 }
 
 -(void) open {
+    
+    if (_closing) {
+        return;
+    }
     
     _closed = NO;
     
@@ -748,19 +766,49 @@
     }
 }
 
--(NSString *)generateClosedLabelString{
+-(NSString *)textForClosedLabel:(UILabel*)label withNameCount:(NSUInteger)nameCount
+{
+    if(self.contactKeys.count<nameCount)
+        return nil;
+    
+    NSArray *contacts = [self.contactKeys subarrayWithRange:NSMakeRange(0,nameCount)];
+    NSMutableArray *names = [NSMutableArray array];
+    for (id object in contacts)
+        [names addObject:[[object nonretainedObjectValue] name]];
+    
+    NSString *namesText = [names componentsJoinedByString:@", "];
+    if (self.contactKeys.count>nameCount)
+        namesText = [NSString stringWithFormat:@"%@ (+%d)",namesText, self.contactKeys.count-nameCount];
+    
+    return namesText;
+}
+
+-(NSString *)textForClosedLabel:(UILabel*)label {
     
     NSString *finalString = @"";
-        
-    if(self.contactKeys.count>0){
-        finalString = [(THContact *)[(NSValue *)[self.contactKeys objectAtIndex:0] nonretainedObjectValue] name];
-        
-        if(self.contactKeys.count>1){
-            finalString = [NSString stringWithFormat:@"%@ +%d",finalString, self.contactKeys.count-1];
-        }
+    
+    for (NSInteger ci=1; ci<=self.contactKeys.count; ci++) {
+        NSString *namesText = [self textForClosedLabel:label withNameCount:ci];
+        if (finalString.length == 0) finalString = namesText;
+        CGSize textSize = [namesText sizeWithFont:[label font]];
+        if (textSize.width > label.frame.size.width)
+            break;
+        finalString = namesText;
     }
     
     return finalString;
+    
+    /*
+     if(self.contactKeys.count>0){
+        finalString = [(THContact *)[(NSValue *)[self.contactKeys objectAtIndex:0] nonretainedObjectValue] name];
+     
+        if(self.contactKeys.count>1){
+            finalString = [NSString stringWithFormat:@"%@ +%d",finalString, self.contactKeys.count-1];
+        }
+     }
+     
+     return finalString;
+     */
 }
 
 @end
