@@ -138,6 +138,11 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     return filteredArray;
 }
 
+-(void)bubbleWasSelected{
+    //#1532
+    [self.contactsTableView setHidden:YES];
+}
+
 - (void)contactPickerDidRemoveContact:(id)contact{
     [self.privateSelectedContacts removeObject:contact];
     
@@ -289,7 +294,30 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    //to not show checked in list
+    BOOL wasChanged = [self removeSelectedFromFilteredContacts];
+    if(self.filteredContacts.count==0){
+        [self.contactsTableView setHidden:YES];
+    }
+    
     return self.filteredContacts.count;
+}
+
+//#1538
+-(BOOL)removeSelectedFromFilteredContacts{
+    NSMutableArray *fcArray = [[NSMutableArray alloc] init];
+    for(THContact *contact in self.filteredContacts){
+        if(![self.privateSelectedContacts containsObject:contact]){
+            [fcArray addObject:contact];
+        }
+    }
+    
+    BOOL changed = NO;
+    if(self.filteredContacts.count!=fcArray.count) changed = YES;
+    
+    self.filteredContacts = fcArray;
+    
+    return changed;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {

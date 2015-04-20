@@ -349,7 +349,7 @@
 - (void)updateLabelFrames {
     [self.promptLabel sizeToFit];
     self.promptLabel.frame = CGRectMake(kHorizontalSidePadding, self.verticalPadding, self.promptLabel.frame.size.width, self.lineHeight);
-    self.placeholderLabel.frame = CGRectMake([self firstLineXOffset], self.verticalPadding, self.frame.size.width, self.lineHeight);
+    self.placeholderLabel.frame = CGRectMake([self firstLineXOffset]+3, self.verticalPadding, self.frame.size.width, self.lineHeight);
 }
 
 - (CGFloat)firstLineXOffset {
@@ -401,8 +401,8 @@
     CGRect textViewFrame = CGRectMake(0, 0, self.scrollView.frame.size.width, textViewHeight);
     
     //now closed view
-    // aby sa vyska dorovnala so scroll viewom
-    self.closedLabel.frame = CGRectMake(0, 2, self.scrollView.frame.size.width, textViewHeight+2); // to fix 1088 bug open keyboard with wrong focus
+    // aby sa vyska dorovnala so scroll viewom // x=3 aby boli zarovnane s textom v bubline
+    self.closedLabel.frame = CGRectMake(3, 0, self.scrollView.frame.size.width, textViewHeight+4); // to fix 1088 bug open keyboard with wrong focus
     
     // Check if we can add the text field on the same line as the last contact bubble
     // countedWidth-3 - to go to next line on time
@@ -424,6 +424,7 @@
     }
     
     textViewFrame.origin.y = lineCount * self.lineHeight + kVerticalPadding + self.verticalPadding;
+    textViewFrame.origin.x = textViewFrame.origin.x+3;
     self.textView.frame = textViewFrame;
 
     // Add text view if it hasn't been added
@@ -505,6 +506,24 @@
 
 #pragma mark - THContactTextFieldDelegate
 
+-(void)textFieldDidBeginEditing:(UITextField *)textField{
+    
+    // to always select when only one can be selected
+    if(self.limitToOne){
+        if(self.contacts.count==1){
+            if(self.selectedContactBubble==nil){
+                id key = [[self.contacts allKeys] objectAtIndex:0];
+                THContactBubble *contactBubble = [self.contacts objectForKey:key];
+                [contactBubble select];
+                self.selectedContactBubble = contactBubble;
+                [self selectTextView];
+                self.textView.text = @"";
+                self.textView.hidden = YES;
+            }
+        }
+    }
+}
+
 - (void)textFieldDidHitBackspaceWithEmptyText:(THContactTextField *)textView {
     self.textView.hidden = NO;
     
@@ -518,6 +537,15 @@
 }
 
 - (void)textFieldDidChange:(THContactTextField *)textView{
+    
+    if(self.limitToOne && self.contacts.count==1){
+        NSString *text = textView.text;
+    
+        [self removeAllContacts];
+        
+        [self.textView setText:text];
+    }
+    
     if ([self.delegate respondsToSelector:@selector(contactPickerTextViewDidChange:)]){
         [self.delegate contactPickerTextViewDidChange:textView.text];
     }
@@ -585,6 +613,9 @@
     [self.textView resignFirstResponder];
     self.textView.text = @"";
     self.textView.hidden = YES;
+    
+    [self.delegate bubbleWasSelected];
+    
 }
 
 - (void)contactBubbleWasUnSelected:(THContactBubble *)contactBubble {
