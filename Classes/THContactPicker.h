@@ -13,7 +13,7 @@
 @protocol THContactPickerNotifDelegate
 -(void)contactPickerUpdatedHeight;
 -(void)contactPickerAddContactButtonClicked;
--(void)contactPickerAddedContact;
+-(void)contactPickerWasChanged;
 -(void)contactPickerShowViewController:(UIViewController *)viewController;
 -(void)contactPickerShowAddUnknownNumberIntoContacts:(THContact *)contact;
 

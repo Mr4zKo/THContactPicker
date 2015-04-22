@@ -548,6 +548,7 @@
         NSString *text = textView.text;
     
         [self removeAllContacts];
+        [self.delegate oneAllowedCleared];
         
         [self.textView setText:text];
     }

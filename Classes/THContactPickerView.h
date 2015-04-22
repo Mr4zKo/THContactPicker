@@ -23,6 +23,7 @@
 - (void)contactPickerAddContact:(THContact *)contact;
 - (void)showViewController:(id)contactKey;
 - (void)bubbleWasSelected;
+- (void)oneAllowedCleared;
 
 @end
 

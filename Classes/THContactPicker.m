@@ -149,6 +149,7 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     NSInteger index = [self.contacts indexOfObject:contact];
     UITableViewCell *cell = [self.contactsTableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:index inSection:0]];
     cell.accessoryType = UITableViewCellAccessoryNone;
+    [self.delegate contactPickerWasChanged];
 }
 
 - (void)contactPickerDidResize:(THContactPickerView *)contactPickerView{
@@ -297,6 +298,12 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     [self.delegate contactPickerShowAddUnknownNumberIntoContacts:contact];
 }
 
+- (void)oneAllowedCleared{
+    [self.privateSelectedContacts removeAllObjects];
+    [self.contactPickerView removeAllContacts];
+    [self.delegate contactPickerWasChanged];
+}
+
 #pragma mark - UITableView Delegate and Datasource functions
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -365,7 +372,7 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
         [self.privateSelectedContacts addObject:contact];
         cell.accessoryType = UITableViewCellAccessoryCheckmark;
         [self.contactPickerView addContact:contact withName:contactTilte];
-        [self.delegate contactPickerAddedContact];
+        [self.delegate contactPickerWasChanged];
     }
     
     self.filteredContacts = self.contacts;
@@ -552,6 +559,7 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     self.filteredContacts = self.contacts;
     [self.contactPickerView open];
     [self.contactsTableView reloadData];
+    [self.delegate contactPickerWasChanged];
 }
 
 - (BOOL)existsSameInPrivateContacts:(THContact *)contact{
@@ -639,6 +647,7 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     [self.privateSelectedContacts removeAllObjects];
     [self.contactPickerView removeAllContacts];
     [self closeContactPicker];
+    [self.delegate contactPickerWasChanged];
 }
 
 - (NSUInteger)selectedContactsCount{
