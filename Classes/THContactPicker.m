@@ -183,6 +183,9 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
         if(addressBook!=nil){
             CFRelease(addressBook);
         }
+        
+        [self.delegate contactPickerShowAddUnknownNumberIntoContacts:contact];
+        
         return;
     }
     
