@@ -114,6 +114,7 @@
     tapGesture.numberOfTapsRequired = 1;
     tapGesture.numberOfTouchesRequired = 1;
     [self addGestureRecognizer:tapGesture];
+    [self.textView addGestureRecognizer:tapGesture];
     
     //default settings
     THContactBubble *contactBubble = [[THContactBubble alloc] initWithName:@""];
