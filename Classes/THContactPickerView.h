@@ -58,4 +58,6 @@
 -(void)clearTextView;
 -(void)allowAddUnknownContact;
 
+-(BOOL)isEditing;
+
 @end

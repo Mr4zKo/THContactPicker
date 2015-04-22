@@ -811,4 +811,8 @@
      */
 }
 
+-(BOOL)isEditing{
+    return !_closed;
+}
+
 @end
