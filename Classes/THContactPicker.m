@@ -178,6 +178,13 @@ NSString *THContactPickerContactCellReuseID = @"THContactPickerContactCell";
     THContact *contact = contactKey;
     
     ABAddressBookRef addressBook = ABAddressBookCreateWithOptions(nil, NULL);
+    ABAuthorizationStatus authorizationStatus = ABAddressBookGetAuthorizationStatus();
+    if(authorizationStatus!=kABAuthorizationStatusAuthorized){
+        if(addressBook!=nil){
+            CFRelease(addressBook);
+        }
+        return;
+    }
     
     CFArrayRef all = ABAddressBookCopyArrayOfAllPeople(addressBook);
     CFIndex n = ABAddressBookGetPersonCount(addressBook);
