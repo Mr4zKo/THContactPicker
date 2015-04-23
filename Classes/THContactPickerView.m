@@ -462,6 +462,7 @@
         
         //TODO: bodnu vzdialenost dat do konstanty a velkost pluska do konstanty
         CGRect newFrame = CGRectMake(frame.origin.x, frame.origin.y, frame.size.width-self.frame.origin.x-26-kPlusButtonRightMargin, frame.size.height);
+        
         self.scrollView.frame = newFrame;
         //frame of views depending on scrollviews frame
         CGRect closedLabelFrame = self.closedLabel.frame;
@@ -815,6 +816,10 @@
 
 -(BOOL)isEditing{
     return !_closed;
+}
+
+-(void)setContactButtonDeltaY:(NSInteger)deltaY{
+    _deltaYAddContactButton = deltaY;
 }
 
 @end

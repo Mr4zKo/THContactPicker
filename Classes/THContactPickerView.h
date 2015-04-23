@@ -60,5 +60,7 @@
 -(void)allowAddUnknownContact;
 
 -(BOOL)isEditing;
+//used for ios6 position bug fix
+-(void)setContactButtonDeltaY:(NSInteger)deltaY;
 
 @end
