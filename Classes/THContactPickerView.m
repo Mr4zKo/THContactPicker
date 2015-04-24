@@ -115,6 +115,7 @@
     tapGesture.numberOfTouchesRequired = 1;
     [self addGestureRecognizer:tapGesture];
     [self.textView addGestureRecognizer:tapGesture];
+    [self.scrollView addGestureRecognizer:tapGesture];
     
     //default settings
     THContactBubble *contactBubble = [[THContactBubble alloc] initWithName:@""];
@@ -664,6 +665,7 @@
 
 - (void)handleTapGesture {
     if (self.limitToOne && self.contactKeys.count == 1){
+        [self.textView becomeFirstResponder];
         return;
     }
     [self scrollToBottomWithAnimation:YES];
