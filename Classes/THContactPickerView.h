@@ -58,6 +58,7 @@
 //helpers
 -(void)clearTextView;
 -(void)allowAddUnknownContact;
+-(NSUInteger)textViewTextLenght;
 
 -(BOOL)isEditing;
 //used for ios6 position bug fix

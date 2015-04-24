@@ -761,6 +761,10 @@
     _shouldAddContact = YES;
 }
 
+-(NSUInteger)textViewTextLenght{
+    return [self.textView.text length];
+}
+
 -(void)unselectSelectedBubble{
     
     if (self.selectedContactBubble){
