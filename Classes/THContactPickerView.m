@@ -382,7 +382,7 @@
             CGFloat width = bubbleFrame.size.width + 2 * kHorizontalPadding;
             if (self.scrollView.frame.size.width - kHorizontalSidePadding - frameOfLastBubble.origin.x - frameOfLastBubble.size.width - width >= 0){ // add to the same line
                                                                                                                  // Place contact bubble just after last bubble on the same line
-                bubbleFrame.origin.x = frameOfLastBubble.origin.x + frameOfLastBubble.size.width + kHorizontalPadding * 2;
+                bubbleFrame.origin.x = frameOfLastBubble.origin.x + frameOfLastBubble.size.width + kHorizontalPadding * 2 - 2.0f;//-2.0f avoid text jumping 
                 bubbleFrame.origin.y = frameOfLastBubble.origin.y;
             } else { // No space on line, jump to next line
                 lineCount++;
@@ -462,7 +462,7 @@
         frame.size.height = newHeight;
         
         //TODO: bodnu vzdialenost dat do konstanty a velkost pluska do konstanty
-        CGRect newFrame = CGRectMake(frame.origin.x, frame.origin.y, frame.size.width-self.frame.origin.x-26-kPlusButtonRightMargin, frame.size.height);
+        CGRect newFrame = CGRectMake(frame.origin.x, frame.origin.y, frame.size.width-self.frame.origin.x-36-kPlusButtonRightMargin, frame.size.height);
         
         self.scrollView.frame = newFrame;
         //frame of views depending on scrollviews frame
@@ -470,7 +470,7 @@
         closedLabelFrame.size.width = self.scrollView.frame.size.width;
         self.closedLabel.frame = closedLabelFrame;
         
-        int contactButtonXpos = newFrame.origin.x+newFrame.size.width+2-7;
+        int contactButtonXpos = newFrame.origin.x+newFrame.size.width+5;//-7;
         int contactButtonYpos = 2-7+_deltaYAddContactButton;
         self.addContactButton.frame = CGRectMake(contactButtonXpos, contactButtonYpos, 36, 36);
         [self.addContactButton addTarget:self action:@selector(addContactPressed:) forControlEvents:UIControlEventTouchUpInside];
