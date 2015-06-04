@@ -577,7 +577,17 @@
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField{
-    if([textField.text isEqualToString:@""]){
+    
+    NSError *error = NULL;
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^[ ]+$"
+                                                                           options:0
+                                                                             error:&error];
+    
+    NSUInteger numberOfMatches = [regex numberOfMatchesInString:textField.text
+                                                        options:0
+                                                          range:NSMakeRange(0, [textField.text length])];
+    
+    if(numberOfMatches>0){
         if ([self.delegate respondsToSelector:@selector(keyboardReturnClicked)]){
             [self.delegate keyboardReturnClicked];
         }
