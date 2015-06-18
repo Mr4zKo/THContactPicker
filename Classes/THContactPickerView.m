@@ -31,6 +31,9 @@
 @property (nonatomic, strong) UIButton *addContactButton;
 @property (nonatomic, strong) UILabel *closedLabel;
 
+// selecting bubble issue #1598
+@property (nonatomic, strong) NSString *lastText;
+
 @end
 
 @implementation THContactPickerView
@@ -533,8 +536,10 @@
     self.textView.hidden = NO;
     
     // Capture "delete" key press when cell is empty
-    self.selectedContactBubble = [self.contacts objectForKey:[self.contactKeys lastObject]];
-    [self.selectedContactBubble select];
+    if(self.lastText.length==0){
+        self.selectedContactBubble = [self.contacts objectForKey:[self.contactKeys lastObject]];
+        [self.selectedContactBubble select];
+    }
     
     [self textFieldDidChange:textView];
     /*
@@ -545,6 +550,8 @@
 }
 
 - (void)textFieldDidChange:(THContactTextField *)textView{
+    
+    self.lastText = textView.text;
     
     if(self.limitToOne && self.contacts.count==1){
         NSString *text = textView.text;
