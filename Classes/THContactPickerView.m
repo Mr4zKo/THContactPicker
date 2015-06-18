@@ -594,7 +594,7 @@
                                                         options:0
                                                           range:NSMakeRange(0, [textField.text length])];
     
-    if(numberOfMatches>0){
+    if(numberOfMatches>0 || [textField.text isEqualToString:@""]){
         if ([self.delegate respondsToSelector:@selector(keyboardReturnClicked)]){
             [self.delegate keyboardReturnClicked];
         }
